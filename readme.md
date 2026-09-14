@@ -92,17 +92,19 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 
 ```
 Grupo_4_GameEducator/
-├── .idea/                # configurações do IntelliJ
-├── .mvn/                 # Maven Wrapper
-├── src/
-│   ├── main/             # código de produção (Aluno, Curso, AlunoService, Plano)
-│   └── test/             # testes unitários (TDDs por US)
+├── backend/
+│   ├── .mvn/              # Maven Wrapper
+│   ├── src/
+│   │   ├── main/          # código de produção (Aluno, Curso, AlunoService, Plano)
+│   │   └── test/          # testes unitários (TDDs por US)
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   └── pom.xml
+├── frontend/               # aplicação Vue.js (consome a API)
+├── docs/evidencias/        # prints de RED/GREEN/BLUE, Postgres, H2
 ├── .gitattributes
 ├── .gitignore
-├── HELP.md
-├── mvnw                  # Maven Wrapper (Linux/macOS)
-├── mvnw.cmd              # Maven Wrapper (Windows)
-├── pom.xml
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -110,6 +112,7 @@ Grupo_4_GameEducator/
 
 ### Backend local (H2, sem Docker)
 
+    cd backend
     mvnw spring-boot:run
 
 - API: http://localhost:8080/api/alunos
@@ -134,7 +137,7 @@ Acesse http://localhost:5173 (o backend precisa estar rodando em paralelo).
 
 ## Como executar os testes
 
-Usando o Maven Wrapper que já acompanha o projeto (não exige Maven instalado):
+Dentro da pasta backend/ (onde fica o Maven Wrapper):
 
 ```bash
 # Linux / macOS
@@ -147,10 +150,11 @@ mvnw.cmd test
 Ou, com Maven instalado globalmente:
 
 ```bash
+cd backend
 mvn test
 ```
 
-No **IntelliJ IDEA**: clique com o botão direito sobre a pasta `src/test` e
+No **IntelliJ IDEA**: clique com o botão direito sobre a pasta 'backend/src/test' e
 selecione **Run 'All Tests'**.
 
 ## Evidências
