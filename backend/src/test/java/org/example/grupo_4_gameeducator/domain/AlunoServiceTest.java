@@ -17,4 +17,16 @@ class AlunoServiceTest {
 
         assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
+
+    @Test
+    void naoDeveNotificarSeCursoNaoConcluido() {
+        var aluno = new Aluno("Fernanda");
+        var curso = new Curso("Inteligência Artificial");
+        curso.setStatus(StatusCurso.EM_ANDAMENTO);
+        var service = new AlunoService();
+
+        service.verificarElegibilidade(aluno, curso);
+
+        assertFalse(aluno.foiNotificado());
+    }
 }
