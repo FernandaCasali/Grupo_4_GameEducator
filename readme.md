@@ -81,6 +81,12 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 - **JUnit** (testes unitários / TDD)
 - **BDD** (Gherkin: Given / When / Then)
 - Desenvolvido no **IntelliJ IDEA**
+- **Spring Boot 4** (Web, Data JPA)
+- **H2** (perfil local) e **PostgreSQL** (perfil Docker)
+- **pgAdmin** (administração do Postgres via container)
+- **springdoc-openapi** (Swagger UI)
+- **Vue 3 + Vite** (frontend)
+- **Docker + Docker Compose**
 
 ## Estrutura do repositório
 
@@ -99,6 +105,32 @@ Grupo_4_GameEducator/
 ├── pom.xml
 └── README.md
 ```
+
+## Como executar a aplicação
+
+### Backend local (H2, sem Docker)
+
+    mvnw spring-boot:run
+
+- API: http://localhost:8080/api/alunos
+- Swagger: http://localhost:8080/swagger-ui/index.html
+- Console H2: http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:mem:gamificacaodb`)
+
+### Backend + PostgreSQL + pgAdmin via Docker
+
+    docker compose up --build
+
+- API: http://localhost:8080/api/alunos
+- Swagger: http://localhost:8080/swagger-ui/index.html
+- pgAdmin: http://localhost:5050 (login `admin@admin.com` / `admin`; servidor com host `db`, porta `5432`, usuário/senha `postgres`)
+
+### Frontend (Vue)
+
+    cd frontend
+    npm install
+    npm run dev
+
+Acesse http://localhost:5173 (o backend precisa estar rodando em paralelo).
 
 ## Como executar os testes
 
@@ -120,3 +152,12 @@ mvn test
 
 No **IntelliJ IDEA**: clique com o botão direito sobre a pasta `src/test` e
 selecione **Run 'All Tests'**.
+
+## Evidências
+
+Prints em `docs/evidencias/`:
+- `red.png` — testes falhando antes da implementação do AlunoService
+- `green.png` — testes passando após a implementação
+- `blue-cobertura.png` — cobertura de 100% nos métodos do cenário trabalhado em grupo (JaCoCo)
+- `postgres.png` — dados do aluno criado pela API, vistos no pgAdmin (PostgreSQL via Docker)
+- `h2.png` — dados do aluno criado pela API, vistos no console do H2 (perfil local)
