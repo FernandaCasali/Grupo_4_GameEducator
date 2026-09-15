@@ -11,7 +11,7 @@ class AlunoServiceTest {
     @Test
     void deveLiberar3CursosQuandoMediaAcimaDe7() {
         // Cria aluno e curso com status CONCLUIDO
-        var aluno = new Aluno("Fernanda");
+        var aluno = new Aluno("Carolina");
         var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
         // Processa desbloqueio com media 8.5 (acima de 7)
@@ -51,49 +51,104 @@ class AlunoServiceTest {
         assertTrue(aluno.foiNotificado());
     }
 
-    //TDD -  Eduarda
+
+    //------------------------------------------------------------------------------------------
+
+    // TDD1 Eduarda — Aluno com curso em andamento nao deve ter cursos desbloqueados, mesmo com media alta.
+    // Verifica que processarDesbloqueio respeita a checagem de elegibilidade para cursos EM_ANDAMENTO.
     @Test
     public void naoDeveLiberarSeCursoEmAndamento() {
-        // Eduarda - Green tests
+        // Cria aluno e curso com status EM_ANDAMENTO
         var aluno = new Aluno("Eduarda");
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
-
-        // Eduarda - Blue tests
-        service.verificarElegibilidade(aluno, curso);
-
-        // Eduarda - Red tests
+        // Tenta processar desbloqueio mesmo com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 9.0);
+        // Nao deve ter desbloqueado nenhum curso, pois o curso nao foi concluido
         assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
 
+    // TDD2 Eduarda — Aluno nao deve ser notificado se o curso nao foi concluido, mesmo com media alta.
+    // Verifica que processarDesbloqueio nao notifica quando o curso esta EM_ANDAMENTO.
     @Test
     public void naoDeveNotificarSeCursoNaoConcluido() {
-        // Eduarda - Green tests
+        // Cria aluno e curso com status EM_ANDAMENTO
         var aluno = new Aluno("Eduarda");
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
-
-        // Eduarda - Blue tests
-        service.verificarElegibilidade(aluno, curso);
-
-        // Eduarda - Red tests
+        // Tenta processar desbloqueio mesmo com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 9.0);
+        // Nao deve ter notificado o aluno
         assertFalse(aluno.foiNotificado());
     }
 
+    // TDD3 Eduarda — Elegibilidade deve retornar falso para curso em andamento.
+    // Verifica que o metodo verificarElegibilidade retorna false quando o curso nao esta concluido.
     @Test
     public void deveRetornarElegibilidadeFalsaParaCursoEmAndamento() {
-        // Eduarda - Green tests
+        // Cria aluno e curso com status EM_ANDAMENTO
         var aluno = new Aluno("Eduarda");
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
-
-        // Eduarda - Blue tests
+        // Verifica elegibilidade do curso ainda em andamento
         boolean elegivel = service.verificarElegibilidade(aluno, curso);
-
-        // Eduarda - Red tests
+        // Deve retornar falso
         assertFalse(elegivel);
+    }
+
+    //-------------------------------------------------------------------------------------
+
+    // TDD1 Carolina — Aluno que ja atingiu o limite de cursos do plano nao deve ter novos cursos liberados.
+    // Verifica que processarDesbloqueio bloqueia a liberacao quando totalCursos >= limite do plano.
+    @Test
+    public void naoDeveLiberarQuandoLimiteDoPlanoAtingido() {
+        // Cria aluno com plano Basico (limite 10) ja no limite, e curso CONCLUIDO
+        var aluno = new Aluno("Eduarda");
+        aluno.setPlano(new Plano("Basico", 10));
+        aluno.setTotalCursos(10);
+        var curso = new Curso("Redes");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        var service = new AlunoService();
+        // Processa desbloqueio mesmo com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 8.0);
+        // Nao deve ter desbloqueado nenhum curso, pois o limite do plano foi atingido
+        assertEquals(0, aluno.getCursosDesbloqueados().size());
+    }
+
+    // TDD2 Carolina — Aluno deve ser notificado quando o limite do plano e atingido.
+    // Verifica que processarDesbloqueio registra a notificacao "LIMITE_ATINGIDO" ao bloquear a liberacao.
+    @Test
+    public void deveNotificarSobreLimiteAtingido() {
+        // Cria aluno com plano Basico (limite 10) ja no limite, e curso CONCLUIDO
+        var aluno = new Aluno("Eduarda");
+        aluno.setPlano(new Plano("Basico", 10));
+        aluno.setTotalCursos(10);
+        var curso = new Curso("Redes");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        var service = new AlunoService();
+        // Processa desbloqueio mesmo com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 8.0);
+        // Deve ter registrado a notificacao de limite atingido
+        assertTrue(aluno.getNotificacoes().contains("LIMITE_ATINGIDO"));
+    }
+
+    // TDD3 Carolina — Aluno abaixo do limite do plano deve ter a liberacao normal de cursos.
+    // Verifica que processarDesbloqueio libera 3 cursos quando o aluno ainda nao atingiu o limite do plano.
+    @Test
+    public void deveLiberarQuandoAbaixoDoLimiteDoPlano() {
+        // Cria aluno com plano Basico (limite 10), abaixo do limite, e curso CONCLUIDO
+        var aluno = new Aluno("Eduarda");
+        aluno.setPlano(new Plano("Basico", 10));
+        aluno.setTotalCursos(5);
+        var curso = new Curso("Redes");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        var service = new AlunoService();
+        // Processa desbloqueio com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 8.0);
+        // Deve ter desbloqueado exatamente 3 cursos bonus, pois o aluno ainda esta abaixo do limite
+        assertEquals(3, aluno.getCursosDesbloqueados().size());
     }
 }
