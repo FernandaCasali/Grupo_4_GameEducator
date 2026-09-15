@@ -46,9 +46,12 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 - **Then** 3 novos cursos devem ser liberados no catálogo **And** o aluno deve ser notificado
 
 **TDDs**
-- `deveLiberar3CursosQuandoMediaAcimaDe7` — libera 3 cursos quando média = 8,5
-- `naoDeveLiberarQuandoMediaIgualOuMenorQue7` — nenhum curso liberado com média = 6,9
-- `deveNotificarAlunoAposLiberacao` — aluno é notificado após a liberação
+
+| TDD | SCENARIO (Green) | EXECUTION (Blue) | RESULTS / ASSERTS (Red) |
+|---|---|---|---|
+| `deveLiberar3CursosQuandoMediaAcimaDe7` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 8.5);` | `assertEquals(3, aluno.getCursosDesbloqueados().size());` |
+| `naoDeveLiberarQuandoMediaIgualOuMenorQue7` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 6.9);` | `assertEquals(0, aluno.getCursosDesbloqueados().size());` |
+| `deveNotificarAlunoAposLiberacao` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 9.0);` | `assertTrue(aluno.foiNotificado());` |
 
 ### Carolina — BDD e TDDs da US2 (bloqueio por limite do plano)
 
@@ -58,9 +61,12 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 - **Then** a liberação deve ser bloqueada **And** o aluno deve ser notificado do limite atingido
 
 **TDDs**
-- `naoDeveLiberarQuandoLimiteDoPlanoAtingido` — bloqueia liberação no limite máximo
-- `deveNotificarSobreLimiteAtingido` — notifica o aluno sobre o limite atingido
-- `deveLiberarQuandoAbaixoDoLimiteDoPlano` — libera normalmente abaixo do limite
+
+| TDD | SCENARIO (Green) | EXECUTION (Blue) | RESULTS / ASSERTS (Red) |
+|---|---|---|---|
+| `naoDeveLiberarQuandoLimiteDoPlanoAtingido` | `var aluno = new Aluno("Eduarda");` `aluno.setPlano(new Plano("Basico", 10));` `aluno.setTotalCursos(10);` `var curso = new Curso("Redes");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 8.0);` | `assertEquals(0, aluno.getCursosDesbloqueados().size());` |
+| `deveNotificarSobreLimiteAtingido` | `var aluno = new Aluno("Eduarda");` `aluno.setPlano(new Plano("Basico", 10));` `aluno.setTotalCursos(10);` `var curso = new Curso("Redes");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 8.0);` | `assertTrue(aluno.getNotificacoes().contains("LIMITE_ATINGIDO"));` |
+| `deveLiberarQuandoAbaixoDoLimiteDoPlano` | `var aluno = new Aluno("Eduarda");` `aluno.setPlano(new Plano("Basico", 10));` `aluno.setTotalCursos(5);` `var curso = new Curso("Redes");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 8.0);` | `assertEquals(3, aluno.getCursosDesbloqueados().size());` |
 
 ### Eduarda — BDD e TDDs da US3 (curso em andamento)
 
@@ -70,9 +76,12 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 - **Then** nenhum cálculo de liberação deve ser realizado **And** nenhuma notificação deve ser enviada
 
 **TDDs**
-- `naoDeveLiberarSeCursoEmAndamento` — nenhum curso liberado se o curso está EM_ANDAMENTO
-- `naoDeveNotificarSeCursoNaoConcluido` — nenhuma notificação enviada
-- `deveRetornarElegibilidadeFalsaParaCursoEmAndamento` — elegibilidade retorna falsa
+
+| TDD | SCENARIO (Green) | EXECUTION (Blue) | RESULTS / ASSERTS (Red) |
+|---|---|---|---|
+| `naoDeveLiberarSeCursoEmAndamento` | `var aluno = new Aluno("Fernanda");` `var curso = new Curso("Inteligência Artificial");` `curso.setStatus(StatusCurso.EM_ANDAMENTO);` `var service = new AlunoService();` | `service.verificarElegibilidade(aluno, curso);` | `assertEquals(0, aluno.getCursosDesbloqueados().size());` |
+| `naoDeveNotificarSeCursoNaoConcluido` | `var aluno = new Aluno("Fernanda");` `var curso = new Curso("Inteligência Artificial");` `curso.setStatus(StatusCurso.EM_ANDAMENTO);` `var service = new AlunoService();` | `service.verificarElegibilidade(aluno, curso);` | `assertFalse(aluno.foiNotificado());` |
+| `deveRetornarElegibilidadeFalsaParaCursoEmAndamento` | `var aluno = new Aluno("Fernanda");` `var curso = new Curso("Inteligência Artificial");` `curso.setStatus(StatusCurso.EM_ANDAMENTO);` `var service = new AlunoService();` | `boolean elegivel = service.verificarElegibilidade(aluno, curso);` | `assertFalse(elegivel);` |
 
 ## Tecnologias
 
@@ -89,6 +98,7 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 - **Docker + Docker Compose**
 
 ## Estrutura do repositório
+
 
 ```
 Grupo_4_GameEducator/
