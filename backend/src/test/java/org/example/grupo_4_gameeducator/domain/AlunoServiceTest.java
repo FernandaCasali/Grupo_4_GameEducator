@@ -101,6 +101,54 @@ class AlunoServiceTest {
 
     //-------------------------------------------------------------------------------------
 
-    // Carolina
+    // TDD1 Carolina — Aluno que ja atingiu o limite de cursos do plano nao deve ter novos cursos liberados.
+    // Verifica que processarDesbloqueio bloqueia a liberacao quando totalCursos >= limite do plano.
+    @Test
+    public void naoDeveLiberarQuandoLimiteDoPlanoAtingido() {
+        // Cria aluno com plano Basico (limite 10) ja no limite, e curso CONCLUIDO
+        var aluno = new Aluno("Eduarda");
+        aluno.setPlano(new Plano("Basico", 10));
+        aluno.setTotalCursos(10);
+        var curso = new Curso("Redes");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        var service = new AlunoService();
+        // Processa desbloqueio mesmo com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 8.0);
+        // Nao deve ter desbloqueado nenhum curso, pois o limite do plano foi atingido
+        assertEquals(0, aluno.getCursosDesbloqueados().size());
+    }
 
+    // TDD2 Carolina — Aluno deve ser notificado quando o limite do plano e atingido.
+    // Verifica que processarDesbloqueio registra a notificacao "LIMITE_ATINGIDO" ao bloquear a liberacao.
+    @Test
+    public void deveNotificarSobreLimiteAtingido() {
+        // Cria aluno com plano Basico (limite 10) ja no limite, e curso CONCLUIDO
+        var aluno = new Aluno("Eduarda");
+        aluno.setPlano(new Plano("Basico", 10));
+        aluno.setTotalCursos(10);
+        var curso = new Curso("Redes");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        var service = new AlunoService();
+        // Processa desbloqueio mesmo com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 8.0);
+        // Deve ter registrado a notificacao de limite atingido
+        assertTrue(aluno.getNotificacoes().contains("LIMITE_ATINGIDO"));
+    }
+
+    // TDD3 Carolina — Aluno abaixo do limite do plano deve ter a liberacao normal de cursos.
+    // Verifica que processarDesbloqueio libera 3 cursos quando o aluno ainda nao atingiu o limite do plano.
+    @Test
+    public void deveLiberarQuandoAbaixoDoLimiteDoPlano() {
+        // Cria aluno com plano Basico (limite 10), abaixo do limite, e curso CONCLUIDO
+        var aluno = new Aluno("Eduarda");
+        aluno.setPlano(new Plano("Basico", 10));
+        aluno.setTotalCursos(5);
+        var curso = new Curso("Redes");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        var service = new AlunoService();
+        // Processa desbloqueio com media acima do minimo
+        service.processarDesbloqueio(aluno, curso, 8.0);
+        // Deve ter desbloqueado exatamente 3 cursos bonus, pois o aluno ainda esta abaixo do limite
+        assertEquals(3, aluno.getCursosDesbloqueados().size());
+    }
 }
