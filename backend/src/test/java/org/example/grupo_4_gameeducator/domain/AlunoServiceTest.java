@@ -6,7 +6,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AlunoServiceTest {
 
-    private final AlunoService service = new AlunoService();
-
-
+    // TDD1 Fernanda — Aluno com media acima de 7 em curso concluido deve desbloquear 3 cursos bonus.
+    // Verifica que o metodo processarDesbloqueio libera exatamente 3 cursos quando a media e superior a 7.
+    @Test
+    void deveLiberar3CursosQuandoMediaAcimaDe7() {
+        // Cria aluno e curso com status CONCLUIDO
+        var aluno = new Aluno("Fernanda");
+        var curso = new Curso("Lógica de Programação");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        // Processa desbloqueio com media 8.5 (acima de 7)
+        var service = new AlunoService();
+        service.processarDesbloqueio(aluno, curso, 8.5);
+        // Deve ter desbloqueado exatamente 3 cursos bonus
+        assertEquals(3, aluno.getCursosDesbloqueados().size());
+    }
 }
