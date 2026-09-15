@@ -20,4 +20,21 @@ class AlunoServiceTest {
         // Deve ter desbloqueado exatamente 3 cursos bonus
         assertEquals(3, aluno.getCursosDesbloqueados().size());
     }
+
+    // TDD2 Fernanda — Aluno com media igual ou menor que 7 nao deve desbloquear nenhum curso.
+    // Verifica que o metodo processarDesbloqueio nao libera cursos quando a media nao atinge o minimo.
+    @Test
+    void naoDeveLiberarQuandoMediaIgualOuMenorQue7() {
+        // Cria aluno e curso com status CONCLUIDO
+        var aluno = new Aluno("Carolina");
+        var curso = new Curso("Lógica de Programação");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+
+        // Processa desbloqueio com media 6.9 (abaixo de 7)
+        var service = new AlunoService();
+        service.processarDesbloqueio(aluno, curso, 6.9);
+
+        // Nao deve ter desbloqueado nenhum curso
+        assertEquals(0, aluno.getCursosDesbloqueados().size());
+    }
 }
