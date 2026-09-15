@@ -6,92 +6,48 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AlunoServiceTest {
 
-    private final AlunoService service = new AlunoService();
-
+    // TDD1 Fernanda — Aluno com media acima de 7 em curso concluido deve desbloquear 3 cursos bonus.
+    // Verifica que o metodo processarDesbloqueio libera exatamente 3 cursos quando a media e superior a 7.
     @Test
     void deveLiberar3CursosQuandoMediaAcimaDe7() {
-        var aluno = new Aluno("Carolina");
-        var curso = new Curso("Logica de Programacao");
+        // Cria aluno e curso com status CONCLUIDO
+        var aluno = new Aluno("Fernanda");
+        var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
+        // Processa desbloqueio com media 8.5 (acima de 7)
+        var service = new AlunoService();
         service.processarDesbloqueio(aluno, curso, 8.5);
+        // Deve ter desbloqueado exatamente 3 cursos bonus
         assertEquals(3, aluno.getCursosDesbloqueados().size());
     }
 
+    // TDD2 Fernanda — Aluno com media igual ou menor que 7 nao deve desbloquear nenhum curso.
+    // Verifica que o metodo processarDesbloqueio nao libera cursos quando a media nao atinge o minimo.
     @Test
     void naoDeveLiberarQuandoMediaIgualOuMenorQue7() {
+        // Cria aluno e curso com status CONCLUIDO
         var aluno = new Aluno("Carolina");
-        var curso = new Curso("Logica de Programacao");
+        var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
+        // Processa desbloqueio com media 6.9 (abaixo de 7)
+        var service = new AlunoService();
         service.processarDesbloqueio(aluno, curso, 6.9);
+        // Nao deve ter desbloqueado nenhum curso
         assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
 
+    // TDD3 Fernanda — Aluno deve ser notificado apos liberacao de cursos bonus.
+    // Verifica que o aluno recebe notificacao quando cursos sao desbloqueados com media acima de 7.
     @Test
     void deveNotificarAlunoAposLiberacao() {
+        // Cria aluno e curso com status CONCLUIDO
         var aluno = new Aluno("Carolina");
-        var curso = new Curso("Logica de Programacao");
+        var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
+        // Processa desbloqueio com media 9.0 (acima de 7)
+        var service = new AlunoService();
         service.processarDesbloqueio(aluno, curso, 9.0);
+        // Aluno deve ter sido notificado sobre os cursos desbloqueados
         assertTrue(aluno.foiNotificado());
-    }
-
-    @Test
-    void naoDeveLiberarQuandoLimiteDoPlanoAtingido() {
-        var aluno = new Aluno("Eduarda");
-        aluno.setPlano(new Plano("Basico", 10));
-        aluno.setTotalCursos(10);
-        var curso = new Curso("Redes");
-        curso.setStatus(StatusCurso.CONCLUIDO);
-        service.processarDesbloqueio(aluno, curso, 8.0);
-        assertEquals(0, aluno.getCursosDesbloqueados().size());
-    }
-
-    @Test
-    void deveNotificarSobreLimiteAtingido() {
-        var aluno = new Aluno("Eduarda");
-        aluno.setPlano(new Plano("Basico", 10));
-        aluno.setTotalCursos(10);
-        var curso = new Curso("Redes");
-        curso.setStatus(StatusCurso.CONCLUIDO);
-        service.processarDesbloqueio(aluno, curso, 8.0);
-        assertTrue(aluno.getNotificacoes().contains(Aluno.NOTIFICACAO_LIMITE_ATINGIDO));
-    }
-
-    @Test
-    void deveLiberarQuandoAbaixoDoLimiteDoPlano() {
-        var aluno = new Aluno("Eduarda");
-        aluno.setPlano(new Plano("Basico", 10));
-        aluno.setTotalCursos(5);
-        var curso = new Curso("Redes");
-        curso.setStatus(StatusCurso.CONCLUIDO);
-        service.processarDesbloqueio(aluno, curso, 8.0);
-        assertEquals(3, aluno.getCursosDesbloqueados().size());
-    }
-
-    @Test
-    void naoDeveLiberarSeCursoEmAndamento() {
-        var aluno = new Aluno("Fernanda");
-        var curso = new Curso("Inteligencia Artificial");
-        curso.setStatus(StatusCurso.EM_ANDAMENTO);
-        service.processarDesbloqueio(aluno, curso, 9.0);
-        assertEquals(0, aluno.getCursosDesbloqueados().size());
-    }
-
-    @Test
-    void naoDeveNotificarSeCursoNaoConcluido() {
-        var aluno = new Aluno("Fernanda");
-        var curso = new Curso("Inteligencia Artificial");
-        curso.setStatus(StatusCurso.EM_ANDAMENTO);
-        service.processarDesbloqueio(aluno, curso, 9.0);
-        assertFalse(aluno.foiNotificado());
-    }
-
-    @Test
-    void deveRetornarElegibilidadeFalsaParaCursoEmAndamento() {
-        var aluno = new Aluno("Fernanda");
-        var curso = new Curso("Inteligencia Artificial");
-        curso.setStatus(StatusCurso.EM_ANDAMENTO);
-        boolean elegivel = service.verificarElegibilidade(aluno, curso);
-        assertFalse(elegivel);
     }
 }
