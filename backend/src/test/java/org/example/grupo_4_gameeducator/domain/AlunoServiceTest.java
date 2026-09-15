@@ -44,16 +44,20 @@ class AlunoServiceTest {
     // Verifica que o aluno recebe notificacao quando cursos sao desbloqueados com media acima de 7.
     @Test
     void deveNotificarAlunoAposLiberacao() {
-        // Cria aluno e curso com status CONCLUIDO
+        // Fernanda - Green tests
         var aluno = new Aluno("Fernanda");
         var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
-        // Processa desbloqueio com media 9.0 (acima de 7)
         var service = new AlunoService();
+
+        // Fernanda - Blue tests
         service.processarDesbloqueio(aluno, curso, 9.0);
-        // Aluno deve ter sido notificado sobre os cursos desbloqueados
+
+        // Fernanda - Red tests
         assertTrue(aluno.foiNotificado());
     }
+
+    //------------------------------------------------------------------------------------------
 
     //TDD -  Eduarda
     @Test
@@ -100,4 +104,9 @@ class AlunoServiceTest {
         // Eduarda - Red tests
         assertFalse(elegivel);
     }
+
+    //-------------------------------------------------------------------------------------
+
+    // Carolina
+
 }
