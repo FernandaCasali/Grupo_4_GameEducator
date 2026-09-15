@@ -50,4 +50,50 @@ class AlunoServiceTest {
         // Aluno deve ter sido notificado sobre os cursos desbloqueados
         assertTrue(aluno.foiNotificado());
     }
+
+    //TDD -  Eduarda
+    @Test
+    public void naoDeveLiberarSeCursoEmAndamento() {
+        // Eduarda - Green tests
+        var aluno = new Aluno("Eduarda");
+        var curso = new Curso("Inteligência Artificial");
+        curso.setStatus(StatusCurso.EM_ANDAMENTO);
+        var service = new AlunoService();
+
+        // Eduarda - Blue tests
+        service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
+        assertEquals(0, aluno.getCursosDesbloqueados().size());
+    }
+
+    @Test
+    public void naoDeveNotificarSeCursoNaoConcluido() {
+        // Eduarda - Green tests
+        var aluno = new Aluno("Eduarda");
+        var curso = new Curso("Inteligência Artificial");
+        curso.setStatus(StatusCurso.EM_ANDAMENTO);
+        var service = new AlunoService();
+
+        // Eduarda - Blue tests
+        service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
+        assertFalse(aluno.foiNotificado());
+    }
+
+    @Test
+    public void deveRetornarElegibilidadeFalsaParaCursoEmAndamento() {
+        // Eduarda - Green tests
+        var aluno = new Aluno("Eduarda");
+        var curso = new Curso("Inteligência Artificial");
+        curso.setStatus(StatusCurso.EM_ANDAMENTO);
+        var service = new AlunoService();
+
+        // Eduarda - Blue tests
+        boolean elegivel = service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
+        assertFalse(elegivel);
+    }
 }
