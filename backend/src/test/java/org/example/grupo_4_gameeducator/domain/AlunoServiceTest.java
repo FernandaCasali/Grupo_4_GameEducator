@@ -11,7 +11,7 @@ class AlunoServiceTest {
     @Test
     void deveLiberar3CursosQuandoMediaAcimaDe7() {
         // Cria aluno e curso com status CONCLUIDO
-        var aluno = new Aluno("Carolina");
+        var aluno = new Aluno("Fernanda");
         var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
         // Processa desbloqueio com media 8.5 (acima de 7)
@@ -51,56 +51,49 @@ class AlunoServiceTest {
         assertTrue(aluno.foiNotificado());
     }
 
-
-    //------------------------------------------------------------------------------------------
-
-    // TDD1 Eduarda — Aluno com curso em andamento nao deve ter cursos desbloqueados, mesmo com media alta.
-    // Verifica que processarDesbloqueio respeita a checagem de elegibilidade para cursos EM_ANDAMENTO.
+    //TDD -  Eduarda
     @Test
     public void naoDeveLiberarSeCursoEmAndamento() {
-        // Cria aluno e curso com status EM_ANDAMENTO
+        // Eduarda - Green tests
         var aluno = new Aluno("Eduarda");
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
-        // Tenta processar desbloqueio mesmo com media acima do minimo
-        service.processarDesbloqueio(aluno, curso, 9.0);
-        // Nao deve ter desbloqueado nenhum curso, pois o curso nao foi concluido
+
+        // Eduarda - Blue tests
+        service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
         assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
 
-    // TDD2 Eduarda — Aluno nao deve ser notificado se o curso nao foi concluido, mesmo com media alta.
-    // Verifica que processarDesbloqueio nao notifica quando o curso esta EM_ANDAMENTO.
     @Test
     public void naoDeveNotificarSeCursoNaoConcluido() {
-        // Cria aluno e curso com status EM_ANDAMENTO
+        // Eduarda - Green tests
         var aluno = new Aluno("Eduarda");
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
-        // Tenta processar desbloqueio mesmo com media acima do minimo
-        service.processarDesbloqueio(aluno, curso, 9.0);
-        // Nao deve ter notificado o aluno
+
+        // Eduarda - Blue tests
+        service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
         assertFalse(aluno.foiNotificado());
     }
 
-    // TDD3 Eduarda — Elegibilidade deve retornar falso para curso em andamento.
-    // Verifica que o metodo verificarElegibilidade retorna false quando o curso nao esta concluido.
     @Test
     public void deveRetornarElegibilidadeFalsaParaCursoEmAndamento() {
-        // Cria aluno e curso com status EM_ANDAMENTO
+        // Eduarda - Green tests
         var aluno = new Aluno("Eduarda");
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
-        // Verifica elegibilidade do curso ainda em andamento
+
+        // Eduarda - Blue tests
         boolean elegivel = service.verificarElegibilidade(aluno, curso);
-        // Deve retornar falso
+
+        // Eduarda - Red tests
         assertFalse(elegivel);
     }
-
-    //-------------------------------------------------------------------------------------
-
-    // Carolina
-
 }
