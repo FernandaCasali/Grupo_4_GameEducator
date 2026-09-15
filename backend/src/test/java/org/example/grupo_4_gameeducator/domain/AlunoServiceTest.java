@@ -68,6 +68,8 @@ class AlunoServiceTest {
         assertEquals(3, aluno.getCursosDesbloqueados().size());
     }
 
+    // TDD1 Fernanda — Curso EM_ANDAMENTO nao deve liberar novos cursos,
+    // mesmo com media alta (9.0). Garante que o desbloqueio so ocorre para cursos CONCLUIDOS.
     @Test
     void naoDeveLiberarSeCursoEmAndamento() {
         var aluno = new Aluno("Fernanda");
@@ -77,6 +79,8 @@ class AlunoServiceTest {
         assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
 
+    // TDD2 Fernanda — Curso nao concluido nao deve gerar notificacao ao aluno.
+    // Complementa a TDD1: alem de nao liberar cursos, tambem nao notifica.
     @Test
     void naoDeveNotificarSeCursoNaoConcluido() {
         var aluno = new Aluno("Fernanda");
