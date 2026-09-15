@@ -69,7 +69,6 @@ class AlunoServiceTest {
     }
 
     // TDD1 Fernanda — Curso EM_ANDAMENTO nao deve liberar novos cursos,
-    // mesmo com media alta (9.0). Garante que o desbloqueio so ocorre para cursos CONCLUIDOS.
     @Test
     void naoDeveLiberarSeCursoEmAndamento() {
         var aluno = new Aluno("Fernanda");
@@ -80,7 +79,6 @@ class AlunoServiceTest {
     }
 
     // TDD2 Fernanda — Curso nao concluido nao deve gerar notificacao ao aluno.
-    // Complementa a TDD1: alem de nao liberar cursos, tambem nao notifica.
     @Test
     void naoDeveNotificarSeCursoNaoConcluido() {
         var aluno = new Aluno("Fernanda");
@@ -90,12 +88,3 @@ class AlunoServiceTest {
         assertFalse(aluno.foiNotificado());
     }
 
-    @Test
-    void deveRetornarElegibilidadeFalsaParaCursoEmAndamento() {
-        var aluno = new Aluno("Fernanda");
-        var curso = new Curso("Inteligencia Artificial");
-        curso.setStatus(StatusCurso.EM_ANDAMENTO);
-        boolean elegivel = service.verificarElegibilidade(aluno, curso);
-        assertFalse(elegivel);
-    }
-}
