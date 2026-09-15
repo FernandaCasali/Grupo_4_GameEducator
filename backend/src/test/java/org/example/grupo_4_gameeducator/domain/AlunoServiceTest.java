@@ -29,12 +29,25 @@ class AlunoServiceTest {
         var aluno = new Aluno("Carolina");
         var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
-
         // Processa desbloqueio com media 6.9 (abaixo de 7)
         var service = new AlunoService();
         service.processarDesbloqueio(aluno, curso, 6.9);
-
         // Nao deve ter desbloqueado nenhum curso
         assertEquals(0, aluno.getCursosDesbloqueados().size());
+    }
+
+    // TDD3 Fernanda — Aluno deve ser notificado apos liberacao de cursos bonus.
+    // Verifica que o aluno recebe notificacao quando cursos sao desbloqueados com media acima de 7.
+    @Test
+    void deveNotificarAlunoAposLiberacao() {
+        // Cria aluno e curso com status CONCLUIDO
+        var aluno = new Aluno("Carolina");
+        var curso = new Curso("Lógica de Programação");
+        curso.setStatus(StatusCurso.CONCLUIDO);
+        // Processa desbloqueio com media 9.0 (acima de 7)
+        var service = new AlunoService();
+        service.processarDesbloqueio(aluno, curso, 9.0);
+        // Aluno deve ter sido notificado sobre os cursos desbloqueados
+        assertTrue(aluno.foiNotificado());
     }
 }
