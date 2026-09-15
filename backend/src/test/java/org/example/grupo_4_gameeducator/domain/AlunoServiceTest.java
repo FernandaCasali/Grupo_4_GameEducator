@@ -27,14 +27,16 @@ class AlunoServiceTest {
     // Verifica que o metodo processarDesbloqueio nao libera cursos quando a media nao atinge o minimo.
     @Test
     void naoDeveLiberarQuandoMediaIgualOuMenorQue7() {
-        // Cria aluno e curso com status CONCLUIDO
+        // Fernanda - Green tests
         var aluno = new Aluno("Fernanda");
         var curso = new Curso("Lógica de Programação");
         curso.setStatus(StatusCurso.CONCLUIDO);
-        // Processa desbloqueio com media 6.9 (abaixo de 7)
         var service = new AlunoService();
+
+        // Fernanda - Blue tests
         service.processarDesbloqueio(aluno, curso, 6.9);
-        // Nao deve ter desbloqueado nenhum curso
+
+        // Fernanda - Red tests
         assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
 
