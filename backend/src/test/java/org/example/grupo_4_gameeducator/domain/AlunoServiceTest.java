@@ -62,6 +62,9 @@ class AlunoServiceTest {
 
         // Eduarda - Blue tests
         service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
+        assertEquals(0, aluno.getCursosDesbloqueados().size());
     }
 
     @Test
@@ -74,6 +77,9 @@ class AlunoServiceTest {
 
         // Eduarda - Blue tests
         service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
+        assertFalse(aluno.foiNotificado());
     }
 
     @Test
@@ -86,5 +92,8 @@ class AlunoServiceTest {
 
         // Eduarda - Blue tests
         boolean elegivel = service.verificarElegibilidade(aluno, curso);
+
+        // Eduarda - Red tests
+        assertFalse(elegivel);
     }
 }
