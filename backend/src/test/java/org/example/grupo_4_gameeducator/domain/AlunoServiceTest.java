@@ -88,3 +88,13 @@ class AlunoServiceTest {
         assertFalse(aluno.foiNotificado());
     }
 
+
+    @Test
+    void deveRetornarElegibilidadeFalsaParaCursoEmAndamento() {
+        var aluno = new Aluno("Fernanda");
+        var curso = new Curso("Inteligencia Artificial");
+        curso.setStatus(StatusCurso.EM_ANDAMENTO);
+        boolean elegivel = service.verificarElegibilidade(aluno, curso);
+        assertFalse(elegivel);
+    }
+}
