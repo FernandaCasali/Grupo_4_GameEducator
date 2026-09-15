@@ -51,6 +51,7 @@ class AlunoServiceTest {
         assertTrue(aluno.foiNotificado());
     }
 
+    //TDD -  Eduarda
     @Test
     public void naoDeveLiberarSeCursoEmAndamento() {
         // Eduarda - Green tests
@@ -58,6 +59,9 @@ class AlunoServiceTest {
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
+
+        // Eduarda - Blue tests
+        service.verificarElegibilidade(aluno, curso);
     }
 
     @Test
@@ -67,6 +71,9 @@ class AlunoServiceTest {
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
+
+        // Eduarda - Blue tests
+        service.verificarElegibilidade(aluno, curso);
     }
 
     @Test
@@ -76,5 +83,8 @@ class AlunoServiceTest {
         var curso = new Curso("Inteligência Artificial");
         curso.setStatus(StatusCurso.EM_ANDAMENTO);
         var service = new AlunoService();
+
+        // Eduarda - Blue tests
+        boolean elegivel = service.verificarElegibilidade(aluno, curso);
     }
 }
