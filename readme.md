@@ -1,4 +1,4 @@
-# Grupo_4_GameEducator — Educação Continuada Gamificada
+[# Grupo_4_GameEducator — Educação Continuada Gamificada
 
 Estudo de caso desenvolvido em aula aplicando **ATDD** (Acceptance Test-Driven
 Development), integrando o fluxo **User Stories → BDD (Scenarios / Acceptance
@@ -175,3 +175,4 @@ Prints em `docs/evidencias/`:
 - `blue-cobertura.png` — cobertura de 100% nos métodos do cenário trabalhado em grupo (JaCoCo)
 - `postgres.png` — dados do aluno criado pela API, vistos no pgAdmin (PostgreSQL via Docker)
 - `h2.png` — dados do aluno criado pela API, vistos no console do H2 (perfil local)
+](https://github.com/FernandaCasali/Grupo_4_GameEducator)
