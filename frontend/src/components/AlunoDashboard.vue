@@ -26,17 +26,11 @@ const resultadoCripto = ref(null)
 
 const isPremium = computed(() => aluno.value?.premium === true)
 
-function voltar() {
-  if (aluno.value) {
-    // volta para a tela de cadastro/busca
-    aluno.value = null
-    alunoId.value = null
-    erro.value = ''
-    resultadoCripto.value = null
-  } else {
-    // volta para a pagina anterior do navegador
-    window.history.back()
-  }
+function voltarParaInicio() {
+  aluno.value = null
+  alunoId.value = null
+  erro.value = ''
+  resultadoCripto.value = null
 }
 
 async function criarAluno() {
@@ -145,9 +139,6 @@ async function chamarAcao(url, corpo) {
 <template>
   <div class="pagina">
     <header class="topo">
-      <button class="voltar" @click="voltar" aria-label="Voltar">
-        <span class="seta">&#8592;</span> Voltar
-      </button>
       <span class="marca">Trilha</span>
       <span class="subtitulo">educacao continuada gamificada</span>
     </header>
@@ -184,6 +175,8 @@ async function chamarAcao(url, corpo) {
       </section>
 
       <template v-else>
+        <button class="voltar" @click="voltarParaInicio">← Voltar</button>
+
         <section class="cartao perfil">
           <div class="identidade">
             <h1>{{ aluno.nome }}</h1>
@@ -204,11 +197,11 @@ async function chamarAcao(url, corpo) {
         </section>
 
         <section class="cartao">
-          <h2>Trilha de cursos desbloqueados</h2>
+          <h2>Cursos desbloqueados como recompensa</h2>
           <ol v-if="aluno.cursosDesbloqueados.length" class="trilha">
             <li v-for="(c, i) in aluno.cursosDesbloqueados" :key="i">{{ c }}</li>
           </ol>
-          <p v-else class="vazio">Nenhum curso desbloqueado ainda. Conclua um curso com media 7,0 ou mais.</p>
+          <p v-else class="vazio">Nenhum curso desbloqueado ainda. Conclua um curso com media acima de 7,0 para desbloquear 3 cursos bonus.</p>
 
           <form class="formulario" @submit.prevent="concluirCurso">
             <input v-model="nomeCurso" placeholder="Nome do curso concluido" />
@@ -259,30 +252,6 @@ async function chamarAcao(url, corpo) {
   </div>
 </template>
 
-<style>
-/* Paleta mapeada dentro do proprio componente (nao-scoped) para nao depender de CSS global.
-   Principais: roxo/lilas + laranja | fundo: bege | verde/teal: detalhes. */
-:root {
-  --golden-sand: #D0D480;
-  --dark-teal: #104F58;
-  --golden-apricot: #E08F40;
-  --wine-plum: #603338;
-  --pale-slate: #ABB2C5;
-  --burnt-peach: #EC8366;
-  --lilac: #BD97BC;
-  --eggshell: #F1E8D7;
-
-  /* mapeamento semantico usado no componente */
-  --tinta: var(--eggshell);          /* fundo da pagina — bege */
-  --tinta-clara: #FBF6EC;            /* fundo dos cartoes — bege mais claro */
-  --pergaminho: var(--wine-plum);    /* texto principal — vinho/roxo escuro (legivel no bege) */
-  --texto-suave: #8A6E86;            /* texto secundario — roxo acinzentado */
-  --ouro: var(--golden-apricot);     /* acao principal — laranja */
-  --ouro-claro: var(--lilac);        /* marca / destaques — lilas */
-  --detalhe-verde: var(--dark-teal); /* verde/teal apenas em detalhes */
-}
-</style>
-
 <style scoped>
 .pagina {
   min-height: 100vh;
@@ -290,7 +259,6 @@ async function chamarAcao(url, corpo) {
   flex-direction: column;
   align-items: center;
   padding: 48px 20px 80px;
-  background: var(--tinta);
 }
 
 .topo {
@@ -300,32 +268,6 @@ async function chamarAcao(url, corpo) {
   align-items: baseline;
   gap: 12px;
   margin-bottom: 36px;
-}
-
-.voltar {
-  background: transparent;
-  border: 1px solid var(--lilac);
-  color: var(--wine-plum);
-  border-radius: 100px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  align-self: center;
-  transition: background .15s, border-color .15s;
-}
-
-.voltar:hover {
-  background: rgba(189, 151, 188, 0.18);
-  border-color: var(--golden-apricot);
-}
-
-.voltar .seta {
-  font-size: 15px;
-  line-height: 1;
 }
 
 .marca {
@@ -352,14 +294,13 @@ async function chamarAcao(url, corpo) {
   background: var(--tinta-clara);
   border-radius: 6px;
   padding: 28px 32px;
-  border: 1px solid rgba(224, 143, 64, 0.28);
+  border: 1px solid rgba(228, 185, 89, 0.18);
 }
 
 .cartao h1 {
   font-family: 'Fraunces', serif;
   font-size: 26px;
   margin: 0 0 8px;
-  color: var(--wine-plum);
 }
 
 .cartao h2 {
@@ -367,7 +308,6 @@ async function chamarAcao(url, corpo) {
   font-size: 18px;
   margin: 0 0 16px;
   font-weight: 500;
-  color: var(--wine-plum);
 }
 
 .descricao {
@@ -401,37 +341,47 @@ async function chamarAcao(url, corpo) {
   margin: 8px 0;
 }
 
-input {
-  background: #FFFFFF;
-  border: 1px solid rgba(189, 151, 188, 0.45);
-  border-radius: 4px;
-  padding: 10px 12px;
-  color: var(--wine-plum);
+.voltar {
+  background: none;
+  border: none;
+  color: var(--texto-suave);
+  cursor: pointer;
   font-size: 14px;
+  padding: 0;
+  margin-bottom: 4px;
 }
 
-input::placeholder { color: #B5A0B2; }
+.voltar:hover {
+  color: var(--pergaminho);
+}
+
+input {
+  background: var(--tinta);
+  border: 1px solid rgba(169, 180, 204, 0.3);
+  border-radius: 4px;
+  padding: 10px 12px;
+  color: var(--pergaminho);
+  font-size: 14px;
+}
 
 input:focus {
   outline: 2px solid var(--ouro);
   outline-offset: 1px;
-  border-color: var(--ouro);
 }
 
 .acao {
   background: var(--ouro);
-  color: #FFFFFF;
+  color: var(--tinta);
   border: none;
   border-radius: 4px;
   padding: 11px 20px;
   font-weight: 600;
   cursor: pointer;
   font-size: 14px;
-  transition: background .15s;
 }
 
 .acao:hover {
-  background: var(--burnt-peach);
+  background: var(--ouro-claro);
 }
 
 .acao:disabled {
@@ -454,9 +404,8 @@ input:focus {
 }
 
 .selo.premium {
-  border-color: var(--lilac);
-  color: #FFFFFF;
-  background: var(--lilac);
+  border-color: var(--ouro-claro);
+  color: var(--ouro-claro);
 }
 
 .metricas {
@@ -475,11 +424,10 @@ input:focus {
   margin: 0;
   font-size: 22px;
   font-weight: 600;
-  color: var(--wine-plum);
 }
 
 .moeda {
-  color: var(--ouro) !important;
+  color: var(--ouro-claro);
 }
 
 .trilha {
@@ -493,11 +441,10 @@ input:focus {
 
 .trilha li {
   padding: 10px 14px;
-  background: rgba(189, 151, 188, 0.14);
-  border-left: 2px solid var(--detalhe-verde);
+  background: rgba(228, 185, 89, 0.08);
+  border-left: 2px solid var(--ouro);
   border-radius: 2px;
   font-size: 14px;
-  color: var(--wine-plum);
 }
 
 .vazio {
@@ -531,11 +478,11 @@ input:focus {
 
 .notificacoes {
   font-size: 13px;
-  color: var(--ouro);
+  color: var(--ouro-claro);
 }
 
 .mensagem-erro {
-  color: var(--burnt-peach);
+  color: #e08585;
   font-size: 14px;
 }
 </style>
