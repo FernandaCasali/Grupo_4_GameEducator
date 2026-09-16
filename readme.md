@@ -35,23 +35,8 @@ de elegibilidade explorados nos BDDs e TDDs abaixo.
 ## BDDs e TDDs por integrante
 
 Os BDDs foram escritos de forma cruzada: cada integrante ficou **responsável
-(Resp.)** por detalhar os critérios de aceitação (Given/When/Then) de uma US
-diferente da que redigiu, e escreveu os TDDs correspondentes.
+(Resp.)** por detalhar os critérios de aceitação (Given/When/Then) em três (3) TDDs
 
-### Fernanda — BDD e TDDs da US1 (liberação por média > 7,0)
-
-**BDD**
-- **Given** o aluno está matriculado em um curso **And** concluiu todas as atividades
-- **When** a média final é calculada como média > 7,0 **And** o desbloqueio é processado
-- **Then** 3 novos cursos devem ser liberados no catálogo **And** o aluno deve ser notificado
-
-**TDDs**
-
-| TDD | SCENARIO (Green) | EXECUTION (Blue) | RESULTS / ASSERTS (Red) |
-|---|---|---|---|
-| `deveLiberar3CursosQuandoMediaAcimaDe7` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 8.5);` | `assertEquals(3, aluno.getCursosDesbloqueados().size());` |
-| `naoDeveLiberarQuandoMediaIgualOuMenorQue7` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 6.9);` | `assertEquals(0, aluno.getCursosDesbloqueados().size());` |
-| `deveNotificarAlunoAposLiberacao` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 9.0);` | `assertTrue(aluno.foiNotificado());` |
 
 ### Carolina — BDD e TDDs da US2 (bloqueio por limite do plano)
 
@@ -83,6 +68,23 @@ diferente da que redigiu, e escreveu os TDDs correspondentes.
 | `naoDeveNotificarSeCursoNaoConcluido` | `var aluno = new Aluno("Fernanda");` `var curso = new Curso("Inteligência Artificial");` `curso.setStatus(StatusCurso.EM_ANDAMENTO);` `var service = new AlunoService();` | `service.verificarElegibilidade(aluno, curso);` | `assertFalse(aluno.foiNotificado());` |
 | `deveRetornarElegibilidadeFalsaParaCursoEmAndamento` | `var aluno = new Aluno("Fernanda");` `var curso = new Curso("Inteligência Artificial");` `curso.setStatus(StatusCurso.EM_ANDAMENTO);` `var service = new AlunoService();` | `boolean elegivel = service.verificarElegibilidade(aluno, curso);` | `assertFalse(elegivel);` |
 
+
+### Fernanda — BDD e TDDs da US1 (liberação por média > 7,0)
+
+**BDD**
+- **Given** o aluno está matriculado em um curso **And** concluiu todas as atividades
+- **When** a média final é calculada como média > 7,0 **And** o desbloqueio é processado
+- **Then** 3 novos cursos devem ser liberados no catálogo **And** o aluno deve ser notificado
+
+**TDDs**
+
+| TDD | SCENARIO (Green) | EXECUTION (Blue) | RESULTS / ASSERTS (Red) |
+|---|---|---|---|
+| `deveLiberar3CursosQuandoMediaAcimaDe7` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 8.5);` | `assertEquals(3, aluno.getCursosDesbloqueados().size());` |
+| `naoDeveLiberarQuandoMediaIgualOuMenorQue7` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 6.9);` | `assertEquals(0, aluno.getCursosDesbloqueados().size());` |
+| `deveNotificarAlunoAposLiberacao` | `var aluno = new Aluno("Carolina");` `var curso = new Curso("Lógica de Programação");` `curso.setStatus(StatusCurso.CONCLUIDO);` `var service = new AlunoService();` | `service.processarDesbloqueio(aluno, curso, 9.0);` | `assertTrue(aluno.foiNotificado());` |
+
+
 ## Tecnologias
 
 - **Java**
@@ -111,6 +113,8 @@ Grupo_4_GameEducator/
 │   ├── mvnw.cmd
 │   └── pom.xml
 ├── frontend/               # aplicação Vue.js (consome a API)
+│   ├── src/
+│   │   ├── components/      
 ├── docs/evidencias/        # prints de RED/GREEN/BLUE, Postgres, H2
 ├── .gitattributes
 ├── .gitignore
@@ -162,6 +166,10 @@ Ou, com Maven instalado globalmente:
 ```bash
 cd backend
 mvn test
+
+cd frontend
+npm install
+npm run dev 
 ```
 
 No **IntelliJ IDEA**: clique com o botão direito sobre a pasta 'backend/src/test' e
