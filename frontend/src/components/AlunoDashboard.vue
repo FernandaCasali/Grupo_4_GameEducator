@@ -12,13 +12,26 @@ const nomeNovoAluno = ref('')
 const planoNome = ref('Basico')
 const planoLimite = ref(10)
 
+const buscarId = ref(null)
+
 const nomeCurso = ref('')
 const media = ref('')
 
 const quantidadeMoedas = ref(1)
 const motivoMoedas = ref('Participacao no forum')
 
+const quantidadeCripto = ref(1)
+const taxaCambio = ref(0.15)
+const resultadoCripto = ref(null)
+
 const isPremium = computed(() => aluno.value?.premium === true)
+
+function voltarParaInicio() {
+  aluno.value = null
+  alunoId.value = null
+  erro.value = ''
+  resultadoCripto.value = null
+}
 
 async function criarAluno() {
   if (!nomeNovoAluno.value.trim()) return
@@ -44,6 +57,22 @@ async function criarAluno() {
   }
 }
 
+async function buscarAluno() {
+  if (!buscarId.value) return
+  carregando.value = true
+  erro.value = ''
+  try {
+    const resp = await fetch(`${API_URL}/${buscarId.value}`)
+    if (!resp.ok) throw new Error('Aluno nao encontrado.')
+    aluno.value = await resp.json()
+    alunoId.value = aluno.value.id
+  } catch (e) {
+    erro.value = e.message
+  } finally {
+    carregando.value = false
+  }
+}
+
 async function concluirCurso() {
   if (!alunoId.value || !nomeCurso.value.trim() || media.value === '') return
   await chamarAcao(`${API_URL}/${alunoId.value}/concluir-curso`, {
@@ -60,6 +89,31 @@ async function creditarMoedas() {
     quantidade: Number(quantidadeMoedas.value),
     motivo: motivoMoedas.value
   })
+}
+
+async function converterCripto() {
+  if (!alunoId.value) return
+  carregando.value = true
+  erro.value = ''
+  resultadoCripto.value = null
+  try {
+    const resp = await fetch(`${API_URL}/${alunoId.value}/converter-cripto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quantidadeMoedas: Number(quantidadeCripto.value),
+        taxaCambio: Number(taxaCambio.value)
+      })
+    })
+    const dados = await resp.json()
+    if (!resp.ok) throw new Error(dados.erro || 'Erro na conversao.')
+    aluno.value = dados
+    resultadoCripto.value = (quantidadeCripto.value * taxaCambio.value).toFixed(4)
+  } catch (e) {
+    erro.value = e.message
+  } finally {
+    carregando.value = false
+  }
 }
 
 async function chamarAcao(url, corpo) {
@@ -108,9 +162,21 @@ async function chamarAcao(url, corpo) {
           </div>
         </div>
         <button class="acao" :disabled="carregando" @click="criarAluno">Criar aluno</button>
+
+        <div class="separador">ou</div>
+
+        <div class="campo">
+          <label>Buscar aluno existente pelo ID</label>
+          <div class="formulario">
+            <input v-model.number="buscarId" type="number" min="1" placeholder="ID do aluno" @keyup.enter="buscarAluno" />
+            <button class="acao" :disabled="carregando" @click="buscarAluno">Buscar</button>
+          </div>
+        </div>
       </section>
 
       <template v-else>
+        <button class="voltar" @click="voltarParaInicio">← Voltar</button>
+
         <section class="cartao perfil">
           <div class="identidade">
             <h1>{{ aluno.nome }}</h1>
@@ -131,11 +197,11 @@ async function chamarAcao(url, corpo) {
         </section>
 
         <section class="cartao">
-          <h2>Trilha de cursos desbloqueados</h2>
+          <h2>Cursos desbloqueados como recompensa</h2>
           <ol v-if="aluno.cursosDesbloqueados.length" class="trilha">
             <li v-for="(c, i) in aluno.cursosDesbloqueados" :key="i">{{ c }}</li>
           </ol>
-          <p v-else class="vazio">Nenhum curso desbloqueado ainda. Conclua um curso com media 7,0 ou mais.</p>
+          <p v-else class="vazio">Nenhum curso desbloqueado ainda. Conclua um curso com media acima de 7,0 para desbloquear 3 cursos bonus.</p>
 
           <form class="formulario" @submit.prevent="concluirCurso">
             <input v-model="nomeCurso" placeholder="Nome do curso concluido" />
@@ -154,6 +220,26 @@ async function chamarAcao(url, corpo) {
           <ul v-if="aluno.historicoMoedas.length" class="historico">
             <li v-for="(h, i) in aluno.historicoMoedas" :key="i">{{ h }}</li>
           </ul>
+        </section>
+
+        <section v-if="isPremium" class="cartao">
+          <h2>Converter moedas em criptomoeda</h2>
+          <form class="formulario" @submit.prevent="converterCripto">
+            <input v-model.number="quantidadeCripto" type="number" min="1" :max="aluno.saldoMoedas" placeholder="Qtd moedas" />
+            <input v-model.number="taxaCambio" type="number" step="0.01" min="0.01" placeholder="Taxa de cambio" />
+            <button class="acao" :disabled="carregando">Converter</button>
+          </form>
+          <p v-if="resultadoCripto !== null" class="notificacoes">
+            Convertido: {{ resultadoCripto }} cripto
+          </p>
+        </section>
+
+        <section v-else class="cartao">
+          <h2>Conversao para criptomoeda</h2>
+          <p class="vazio">
+            Disponivel apenas para alunos Premium (12+ cursos concluidos).
+            Voce tem {{ aluno.totalCursos }} cursos.
+          </p>
         </section>
 
         <p v-if="aluno.notificacoes.length" class="notificacoes">
@@ -248,6 +334,27 @@ async function chamarAcao(url, corpo) {
   gap: 16px;
 }
 
+.separador {
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 13px;
+  margin: 8px 0;
+}
+
+.voltar {
+  background: none;
+  border: none;
+  color: #264F56;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.voltar:hover {
+  color: #D1D48B;
+}
+
 input {
   background: var(--tinta);
   border: 1px solid rgba(169, 180, 204, 0.3);
@@ -292,13 +399,13 @@ input:focus {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 100px;
-  border: 1px solid var(--texto-suave);
-  color: var(--texto-suave);
+  border: 2px solid #D1D48B;
+  color: #D1D48B;
 }
 
 .selo.premium {
-  border-color: var(--ouro-claro);
-  color: var(--ouro-claro);
+  border-color: #264F56;
+  color: #264F56;
 }
 
 .metricas {

@@ -8,12 +8,23 @@ import AlunoDashboard from './components/AlunoDashboard.vue'
 
 <style>
 :root {
-  --tinta: #16213a;
-  --tinta-clara: #223258;
-  --pergaminho: #f7f3ea;
-  --ouro: #c9962f;
-  --ouro-claro: #e4b959;
-  --texto-suave: #a9b4cc;
+  --golden-sand: #D0D480;
+  --dark-teal: #D1D48B;
+  --golden-apricot: #E08F40;
+  --wine-plum: #603338;
+  --pale-slate: #ABB2C5;
+  --burnt-peach: #EC8366;
+  --lilac: #BD97BC;
+  --eggshell: #F1E8D7;
+
+  /* mapeamento semantico usado no componente */
+  --tinta: var(--eggshell);          /* fundo da pagina — bege */
+  --tinta-clara: #FBF6EC;            /* fundo dos cartoes — bege mais claro */
+  --pergaminho: var(--wine-plum);    /* texto principal — vinho/roxo escuro (legivel no bege) */
+  --texto-suave: #8A6E86;            /* texto secundario — roxo acinzentado */
+  --ouro: var(--golden-apricot);     /* acao principal — laranja */
+  --ouro-claro: var(--lilac);        /* marca / destaques — lilas */
+  --detalhe-verde: var(--dark-teal); /* verde/teal apenas em detalhes */
 }
 
 * {
