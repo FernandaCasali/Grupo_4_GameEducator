@@ -9,7 +9,7 @@ import AlunoDashboard from './components/AlunoDashboard.vue'
 <style>
 :root {
   --golden-sand: #D0D480;
-  --dark-teal: #104F58;
+  --dark-teal: #D1D48B;
   --golden-apricot: #E08F40;
   --wine-plum: #603338;
   --pale-slate: #ABB2C5;

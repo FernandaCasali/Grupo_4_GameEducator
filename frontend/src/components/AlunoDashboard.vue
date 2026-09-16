@@ -344,7 +344,7 @@ async function chamarAcao(url, corpo) {
 .voltar {
   background: none;
   border: none;
-  color: var(--texto-suave);
+  color: #264F56;
   cursor: pointer;
   font-size: 14px;
   padding: 0;
@@ -352,7 +352,7 @@ async function chamarAcao(url, corpo) {
 }
 
 .voltar:hover {
-  color: var(--pergaminho);
+  color: #D1D48B;
 }
 
 input {
@@ -399,13 +399,13 @@ input:focus {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 100px;
-  border: 1px solid var(--texto-suave);
-  color: var(--texto-suave);
+  border: 2px solid #D1D48B;
+  color: #D1D48B;
 }
 
 .selo.premium {
-  border-color: var(--ouro-claro);
-  color: var(--ouro-claro);
+  border-color: #264F56;
+  color: #264F56;
 }
 
 .metricas {
