@@ -151,4 +151,98 @@ class AlunoServiceTest {
         // Deve ter desbloqueado exatamente 3 cursos bonus, pois o aluno ainda esta abaixo do limite
         assertEquals(3, aluno.getCursosDesbloqueados().size());
     }
+
+    // ==========================================================
+    // Testes complementares — moedas, premium e conversao cripto
+    // ==========================================================
+
+    // --- creditarMoedasPorEngajamento ---
+
+    @Test
+    void deveCreditarMoedasEregistrarHistorico() {
+        var aluno = new Aluno("Carolina");
+        var service = new AlunoService();
+        service.creditarMoedasPorEngajamento(aluno, 10, "Conclusao de curso");
+        assertEquals(10, aluno.getSaldoMoedas());
+        assertEquals(1, aluno.getHistoricoMoedas().size());
+        assertTrue(aluno.getHistoricoMoedas().get(0).contains("+10"));
+    }
+
+    @Test
+    void deveLancarExcecaoAoCreditarMoedasZero() {
+        var aluno = new Aluno("Carolina");
+        var service = new AlunoService();
+        assertThrows(IllegalArgumentException.class,
+                () -> service.creditarMoedasPorEngajamento(aluno, 0, "qualquer"));
+    }
+
+    @Test
+    void deveLancarExcecaoAoCreditarMoedasNegativas() {
+        var aluno = new Aluno("Carolina");
+        var service = new AlunoService();
+        assertThrows(IllegalArgumentException.class,
+                () -> service.creditarMoedasPorEngajamento(aluno, -5, "qualquer"));
+    }
+
+    // --- isPremium ---
+
+    @Test
+    void deveSerPremiumComDozeCursos() {
+        var aluno = new Aluno("Fernanda");
+        aluno.setTotalCursos(12);
+        assertTrue(new AlunoService().isPremium(aluno));
+    }
+
+    @Test
+    void naoDeveSerPremiumComMenosDeDozeCursos() {
+        var aluno = new Aluno("Fernanda");
+        aluno.setTotalCursos(11);
+        assertFalse(new AlunoService().isPremium(aluno));
+    }
+
+    // --- converterMoedasParaCripto ---
+
+    @Test
+    void deveConverterMoedasParaCriptoQuandoPremium() {
+        var aluno = new Aluno("Fernanda");
+        aluno.setTotalCursos(12);
+        aluno.adicionarMoedas(100);
+        var service = new AlunoService();
+        double cripto = service.converterMoedasParaCripto(aluno, 50, 0.01);
+        assertEquals(0.5, cripto);
+        assertEquals(50, aluno.getSaldoMoedas());
+        assertEquals(1, aluno.getHistoricoMoedas().size());
+        assertTrue(aluno.getHistoricoMoedas().get(0).contains("Conversao para cripto"));
+    }
+
+    @Test
+    void naoDeveConverterQuandoNaoPremium() {
+        var aluno = new Aluno("Carolina");
+        aluno.setTotalCursos(5);
+        aluno.adicionarMoedas(100);
+        var service = new AlunoService();
+        assertThrows(IllegalStateException.class,
+                () -> service.converterMoedasParaCripto(aluno, 10, 0.01));
+    }
+
+    @Test
+    void naoDeveConverterComQuantidadeZeroOuNegativa() {
+        var aluno = new Aluno("Fernanda");
+        aluno.setTotalCursos(12);
+        aluno.adicionarMoedas(50);
+        var service = new AlunoService();
+        assertThrows(IllegalArgumentException.class,
+                () -> service.converterMoedasParaCripto(aluno, 0, 0.01));
+    }
+
+    @Test
+    void naoDeveConverterQuandoQuantidadeMaiorQueSaldo() {
+        var aluno = new Aluno("Fernanda");
+        aluno.setTotalCursos(12);
+        aluno.adicionarMoedas(50);
+        var service = new AlunoService();
+        assertThrows(IllegalArgumentException.class,
+                () -> service.converterMoedasParaCripto(aluno, 100, 0.01));
+    }
+
 }
