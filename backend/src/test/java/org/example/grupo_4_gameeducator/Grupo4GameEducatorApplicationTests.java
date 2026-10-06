@@ -10,4 +10,17 @@ class Grupo4GameEducatorApplicationTests {
     void contextLoads() {
     }
 
+    @Test
+    void mainDeveIniciarAplicacaoSemLevantarServidorWeb() {
+        Grupo4GameEducatorApplication.main(new String[]{
+                "--spring.main.web-application-type=none",
+                "--spring.main.banner-mode=off",
+                "--spring.jpa.hibernate.ddl-auto=create-drop",
+                "--spring.datasource.url=jdbc:h2:mem:testdb-main",
+                "--spring.datasource.driver-class-name=org.h2.Driver",
+                "--spring.datasource.username=sa",
+                "--spring.datasource.password="
+        });
+    }
+
 }

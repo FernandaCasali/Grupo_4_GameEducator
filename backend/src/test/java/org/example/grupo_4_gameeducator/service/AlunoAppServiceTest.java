@@ -131,4 +131,47 @@ class AlunoAppServiceTest {
 
         assertEquals(5, resp.saldoMoedas());
     }
+
+    @Test
+    void deveManterNotificadoQuandoEntityJaEstavaNotificada() {
+        // cobre o ramo "entity.isNotificado() == true" no toDominio
+        entityExemplo.setNotificado(true);
+        when(repository.findById(1L)).thenReturn(Optional.of(entityExemplo));
+        when(repository.save(any(AlunoEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var resp = service.creditarMoedas(1L,
+                new CreditarMoedasRequest(5, "forum"));
+
+        assertTrue(resp.notificado());
+    }
+
+    @Test
+    void deveMapearEntityComPlanoNomeNuloSemCriarPlanoNoDominio() {
+        // cobre o ramo "planoNome == null" no toDominio (diferente de blank)
+        var semPlano = new AlunoEntity("Carol", null, 0);
+        when(repository.findById(1L)).thenReturn(Optional.of(semPlano));
+        when(repository.save(any(AlunoEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var resp = service.creditarMoedas(1L,
+                new CreditarMoedasRequest(3, "forum"));
+
+        assertEquals(3, resp.saldoMoedas());
+        assertNull(resp.planoNome());
+    }
+
+    @Test
+    void devePreservarCursosDesbloqueadosExistentesAoMapearParaDominio() {
+        // cobre o forEach de cursosDesbloqueados no toDominio (lista nao vazia)
+        entityExemplo.getCursosDesbloqueados().add("Logica");
+        entityExemplo.getCursosDesbloqueados().add("Java");
+        when(repository.findById(1L)).thenReturn(Optional.of(entityExemplo));
+        when(repository.save(any(AlunoEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var resp = service.creditarMoedas(1L,
+                new CreditarMoedasRequest(1, "forum"));
+
+        assertEquals(2, resp.cursosDesbloqueados().size());
+        assertTrue(resp.cursosDesbloqueados().contains("Logica"));
+        assertTrue(resp.cursosDesbloqueados().contains("Java"));
+    }
 }

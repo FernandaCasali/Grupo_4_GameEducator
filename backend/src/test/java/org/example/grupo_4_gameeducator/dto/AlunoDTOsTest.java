@@ -40,6 +40,12 @@ class AlunoDTOsTest {
     }
 
     @Test
+    void deveInstanciarAClasseWrapperAlunoDTOs() {
+        var wrapper = new AlunoDTOs();
+        assertNotNull(wrapper);
+    }
+
+    @Test
     void alunoResponseDeveExporTodosOsCampos() {
         var r = new AlunoResponse(
                 1L, "Ana", "Basico", 3, false, 10, true,

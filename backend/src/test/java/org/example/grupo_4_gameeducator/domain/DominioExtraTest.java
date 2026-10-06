@@ -53,7 +53,9 @@ class DominioExtraTest {
 
     @Test
     void cursoNaoDeveSerIgualANull() {
-        assertNotEquals(null, new Curso("Java"));
+        // Chama equals(null) diretamente para exercer o ramo "!(o instanceof Curso)"
+        var curso = new Curso("Java");
+        assertFalse(curso.equals(null));
     }
 
     @Test
@@ -86,5 +88,18 @@ class DominioExtraTest {
         assertTrue(aluno.getNotificacoes().isEmpty());
         assertTrue(aluno.getHistoricoMoedas().isEmpty());
         assertEquals(0, aluno.getTotalCursos());
+    }
+
+    @Test
+    void alunoDeveFicarNotificadoAposMarcarComoNotificado() {
+        var aluno = new Aluno("Carolina");
+        aluno.marcarComoNotificado();
+        assertTrue(aluno.foiNotificado());
+    }
+
+    @Test
+    void alunoDeveExporNomePassadoNoConstrutor() {
+        var aluno = new Aluno("Carolina");
+        assertEquals("Carolina", aluno.getNome());
     }
 }
