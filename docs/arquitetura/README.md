@@ -158,6 +158,10 @@ Arquivos de apoio:
 - `evidencias/depois-testes.txt` — árvore de testes.
 - `evidencias/` — **colar aqui** a saída do `mvn test` e o relatório JaCoCo após rodar (ver abaixo).
 
+**Ranking (RF01) funcionando:**
+
+![Ranking no Swagger](evidencias/d1-ranking-swagger.png)
+
 ### Como reproduzir
 
 ```bash
