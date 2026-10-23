@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.16, pytest-8.3.4, pluggy-1.7.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /tmp/claude-0/-home-claude/b841c86e-3a0e-5ba1-8ffb-ff0f14589e59/scratchpad/b1/Grupo_4_GameEducator-master/ia-service
+plugins: platformdirs-4.12.2, anyio-4.15.1
+collecting ... collected 6 items
+tests/test_recomendacoes.py::test_health PASSED                          [ 16%]
+tests/test_recomendacoes.py::test_recomenda_proximos_cursos_da_trilha PASSED [ 33%]
+tests/test_recomendacoes.py::test_nao_recomenda_curso_ja_concluido PASSED [ 50%]
+tests/test_recomendacoes.py::test_aluno_novo_recebe_cursos_iniciais PASSED [ 66%]
+tests/test_recomendacoes.py::test_respeita_limite PASSED                 [ 83%]
+tests/test_recomendacoes.py::test_rejeita_limite_invalido PASSED         [100%]
+============================== 6 passed in 0.29s ===============================

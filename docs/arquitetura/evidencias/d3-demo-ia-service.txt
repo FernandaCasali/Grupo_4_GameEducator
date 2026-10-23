@@ -1,0 +1,10 @@
+# Demonstração real do ia-service (executada na criação deste material)
+# 1) Serviço no ar:
+POST /recomendacoes {"alunoId":1,"cursosConcluidos":["Logica"]}
+-> {"recomendacoes":[{"curso":"Java Basico","motivo":"Proximo passo apos Logica"},{"curso":"Estruturas de Dados","motivo":"Proximo passo apos Logica"}],"modelo":"regras-trilha-v1"}
+
+# 2) Serviço interrompido (kill do uvicorn):
+GET /health -> conexao recusada
+
+# Falta (a equipe executa e anexa): o mesmo teste com o Core Spring Boot chamando
+# GET /api/alunos/{id}/recomendacoes com o serviço no ar e depois parado (esperado: degradado=false -> degradado=true).

@@ -1,0 +1,12 @@
+./org/example/grupo_4_gameeducator/Grupo4GameEducatorApplication.java
+./org/example/grupo_4_gameeducator/controller/AlunoController.java
+./org/example/grupo_4_gameeducator/controller/ApiExceptionHandler.java
+./org/example/grupo_4_gameeducator/domain/Aluno.java
+./org/example/grupo_4_gameeducator/domain/AlunoService.java
+./org/example/grupo_4_gameeducator/domain/Curso.java
+./org/example/grupo_4_gameeducator/domain/Plano.java
+./org/example/grupo_4_gameeducator/domain/StatusCurso.java
+./org/example/grupo_4_gameeducator/dto/AlunoDTOs.java
+./org/example/grupo_4_gameeducator/entity/AlunoEntity.java
+./org/example/grupo_4_gameeducator/repository/AlunoRepository.java
+./org/example/grupo_4_gameeducator/service/AlunoAppService.java
