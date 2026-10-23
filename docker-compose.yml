@@ -41,11 +41,21 @@ services:
       DB_NAME: gamificacaodb
       DB_USER: postgres
       DB_PASSWORD: postgres
+      IA_SERVICE_URL: http://ia-service:8000
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+
+  # B1 / Desafio 3: servico Python de IA. Se parar (docker compose stop ia-service),
+  # o Core continua funcionando e /recomendacoes responde em modo degradado.
+  ia-service:
+    build: ./ia-service
+    container_name: gamificacao-ia
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
 
 volumes:
   postgres_data:
