@@ -130,7 +130,8 @@ Detalhamento dos componentes internos (e portas/adaptadores) fica para o Desafio
 aluno/        api (AlunoController, AlunoGateway, DTOs) · application · domain (Aluno, Plano, Curso) · internal/persistence
 cursos/       api (+ CursoConcluidoEvent) · application · domain (DesbloqueioService)
 moedas/       api · application · domain (MoedasService)
-ranking/      api · application                                  (D1)
+ranking/      api · application · domain (PontuacaoRanking)       (D1, D2)
+conquistas/   api · application · domain (Badge, RegrasConquistas) (D2, RF02)                                  (D1)
 recomendacao/ api · application (porta) · internal (adapter HTTP)  (D3)
 notificacoes/ api · application (porta) · internal (adapter)       (D4)
 shared/       web (ApiExceptionHandler) · config (AsyncConfig)
@@ -260,6 +261,7 @@ Core continua Spring Boot; regras existentes (`DesbloqueioService`, `MoedasServi
 | Alternativas | A) manter; B) Ports & Adapters; C) Clean/Onion completo. |
 | Decisão | Criar a porta `aluno.application.AlunoRepositorio`; mover o mapeamento para o adapter `JpaAlunoRepositorio`; adotar `InMemoryAlunoRepositorio` como adapter de teste. |
 | Consequências positivas | `AlunoAppService`, `CursosAppService` e `MoedasAppService` testados sem Spring, JPA ou Mockito; domínio sem dependência de framework (verificado). |
+| Aplicação a outras portas | O mesmo padrão aparece na IA (`RecomendadorPort`, ADR-003) e nas notificações (`NotificadorPort`, ADR-004) |
 | Trade-offs | Indireção extra; duas leituras por atualização (aceitável no volume atual; revisar com métricas). |
 | Gatilho de revisão | Se a duplicação de leituras aparecer em métricas de latência, otimizar o adapter sem tocar na porta. |
 
@@ -300,6 +302,8 @@ flowchart TB
 | `DesbloqueioServiceTest` e `MoedasServiceTest` (regras de domínio) | Continuam iguais: a regra foi isolada e reaproveitada |
 | `JpaAlunoRepositorioTest` | Tradução entidade ↔ domínio (planos vazio/nulo, cursos, notificado) preservada |
 | `FronteirasModulosTest` | Domínio não depende de Spring/JPA; aplicação não conhece adapters nem JPA |
+| `PontuacaoRankingTest` (regra de ranking no domínio) | A fórmula do ranking é Java puro, testada sem Spring; trocar o peso afeta uma só classe |
+| `RegrasConquistasTest` (badges, RF02) | A regra de conquistas é Java puro, testada sem Spring; novo badge ou limite afeta uma só classe |
 
 ## 10. Conclusão
 
@@ -358,7 +362,7 @@ Core permanece Java/Spring Boot; ML/RAG em Python; indisponibilidade da IA não 
 | Alternativas | A) embutida; B) módulo acoplado; C) serviço Python. |
 | Decisão | `ia-service` (FastAPI) exposto por HTTP/JSON síncrono. No Core, módulo `recomendacao` com **porta** `RecomendadorPort`, adapter HTTP com timeout de 1,5 s e fallback degradado. Um único serviço para ML e RAG por ora. |
 | Consequências positivas | Falha da IA não derruba o Core (comprovado por testes); contrato independente de linguagem; Core não conhece Python. |
-| Trade-offs | Latência de rede; novo componente operacional; recomendações indisponíveis durante a queda.Descoberta no mini-lab: o cliente HTTP do Java (JDK) tenta negociar HTTP/2 e o uvicorn rejeita o upgrade (corpo perdido, erro 422); o adapter força HTTP/1.1.|
+| Trade-offs | Latência de rede; novo componente operacional; recomendações indisponíveis durante a queda. Descoberta no mini-lab: o cliente HTTP do Java (JDK) tenta negociar HTTP/2 e o uvicorn rejeita o upgrade (corpo perdido, erro 422); o adapter força HTTP/1.1.|
 | Gatilho de revisão | Separar ML e RAG se escala/latência/ciclo divergirem; trocar HTTP por fila se a recomendação virar processamento em lote. |
 
 ## 7. C4 — Container (atualizado)
