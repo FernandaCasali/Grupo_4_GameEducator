@@ -3,8 +3,10 @@
 Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de trás para frente:
 **C4 ← ADR ← ASR + RPC ← RF/RNF**, com a evidência sustentando o raciocínio.
 
-- Equipe: _(preencher nomes)_
-- Repositório: _(preencher link)_
+- Equipe: Fernanda Theodoro Casali- 235329 /
+  Carolina Leamari - 235249 /
+  Eduarda Gomes Abreu e Almeida - 236021
+- Repositório: https://github.com/FernandaCasali/Grupo_4_GameEducator.git
 - Branch do B1: `b1-architecture-lab`
 
 ---
@@ -157,6 +159,8 @@ Arquivos de apoio:
 - `evidencias/antes-estrutura.txt` e `evidencias/depois-estrutura.txt` — árvore de classes.
 - `evidencias/depois-testes.txt` — árvore de testes.
 - `evidencias/` — **colar aqui** a saída do `mvn test` e o relatório JaCoCo após rodar (ver abaixo).
+
+![mvn-test.png](evidencias/mvn-test.png)
 
 **Ranking (RF01) funcionando:**
 
@@ -354,7 +358,7 @@ Core permanece Java/Spring Boot; ML/RAG em Python; indisponibilidade da IA não 
 | Alternativas | A) embutida; B) módulo acoplado; C) serviço Python. |
 | Decisão | `ia-service` (FastAPI) exposto por HTTP/JSON síncrono. No Core, módulo `recomendacao` com **porta** `RecomendadorPort`, adapter HTTP com timeout de 1,5 s e fallback degradado. Um único serviço para ML e RAG por ora. |
 | Consequências positivas | Falha da IA não derruba o Core (comprovado por testes); contrato independente de linguagem; Core não conhece Python. |
-| Trade-offs | Latência de rede; novo componente operacional; recomendações indisponíveis durante a queda. |
+| Trade-offs | Latência de rede; novo componente operacional; recomendações indisponíveis durante a queda.Descoberta no mini-lab: o cliente HTTP do Java (JDK) tenta negociar HTTP/2 e o uvicorn rejeita o upgrade (corpo perdido, erro 422); o adapter força HTTP/1.1.|
 | Gatilho de revisão | Separar ML e RAG se escala/latência/ciclo divergirem; trocar HTTP por fila se a recomendação virar processamento em lote. |
 
 ## 7. C4 — Container (atualizado)
@@ -378,6 +382,9 @@ flowchart LR
 | Falha: erro 500 | `IaServiceRecomendadorTest.deveLancarIndisponivelQuandoServicoRetornaErro500` |
 | Degradação | `RecomendacaoAppServiceTest.deveDegradarSemQuebrarQuandoIaEstaIndisponivel` |
 | Serviço Python | `ia-service/tests` — 6 testes (resultado real em `evidencias/d3-pytest-ia-service.txt`) |
+
+![d3-1-ia-fora-degradado.png](evidencias/d3-1-ia-fora-degradado.png)
+![d3-2-ia-no-ar.png](evidencias/d3-2-ia-no-ar.png)
 
 **Roteiro manual (fazer e anexar prints em `evidencias/`):**
 
@@ -489,6 +496,11 @@ sequenceDiagram
 | Consumidor indisponível vira `FALHOU` sem exceção | `NotificacaoAppServiceTest.consumidorIndisponivelRegistraFalhaSemLancarExcecao` |
 | Recuperação | `NotificacaoAppServiceTest.deveRecuperarNotificacoesFalhasQuandoConsumidorVolta` |
 | Acoplamento | `FronteirasModulosTest` — `cursos` não conhece `notificacoes` |
+
+![d4-1-conclusao-ok.png](evidencias/d4-1-conclusao-ok.png)
+![d4-2-notificacao-falhou.png](evidencias/d4-2-notificacao-falhou.png)
+![d4-3-reenvio.png](evidencias/d4-3-reenvio.png)
+![d4-4-notificacao-enviada.png](evidencias/d4-4-notificacao-enviada.png)
 
 **Roteiro manual (fazer e anexar prints):**
 
