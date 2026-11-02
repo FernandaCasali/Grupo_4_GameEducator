@@ -22,7 +22,7 @@ class FronteirasModulosTest {
     private static final String BASE = "org.example.grupo_4_gameeducator";
 
     private static final List<String> MODULOS =
-            List.of("aluno", "cursos", "moedas", "ranking", "recomendacao", "notificacoes");
+            List.of("aluno", "cursos", "moedas", "ranking", "conquistas", "recomendacao", "notificacoes");
 
     /** Quem cada modulo PODE conhecer (alem de si mesmo). */
     private static final Map<String, List<String>> PERMITIDO = Map.of(
@@ -30,6 +30,7 @@ class FronteirasModulosTest {
             "cursos", List.of("aluno"),
             "moedas", List.of("aluno"),
             "ranking", List.of("aluno"),
+            "conquistas", List.of("aluno"),
             "recomendacao", List.of("aluno"),
             "notificacoes", List.of("cursos"));
 
