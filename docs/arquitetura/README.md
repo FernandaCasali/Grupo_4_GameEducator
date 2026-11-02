@@ -22,7 +22,7 @@ Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de tr
 | Modificabilidade | | ✅ | | | | |
 | Deploy independente | | | ✅ | | | |
 | Tolerância a falhas | | | ✅ | ✅ | | |
-| Interoperabilidade | | | ✅ | | ✅ |
+| Interoperabilidade | | | ✅ | | ✅ | |
 | Desacoplamento | | | | ✅ | | |
 | Recuperabilidade | | | | ✅ | | |
 | Tolerância à conectividade intermitente | | | | | ✅ | |
@@ -134,7 +134,7 @@ aluno/        api (AlunoController, AlunoGateway, DTOs) · application · domain
 cursos/       api (+ CursoConcluidoEvent) · application · domain (DesbloqueioService)
 moedas/       api · application · domain (MoedasService)
 ranking/      api · application · domain (PontuacaoRanking)       (D1, D2)
-conquistas/   api · application · domain (Badge, RegrasConquistas) (D2, RF02)                                  (D1)
+conquistas/   api · application · domain (Badge, RegrasConquistas) (D2, RF02)
 recomendacao/ api · application (porta) · internal (adapter HTTP)  (D3)
 notificacoes/ api · application (porta) · internal (adapter)       (D4)
 shared/       web (ApiExceptionHandler) · config (AsyncConfig)
