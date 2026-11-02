@@ -23,7 +23,10 @@ public class IaServiceRecomendador implements RecomendadorPort {
             @Value("${ia.service.url:http://localhost:8000}") String baseUrl,
             @Value("${ia.service.timeout-ms:1500}") int timeoutMs) {
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(
-                HttpClient.newBuilder().connectTimeout(Duration.ofMillis(timeoutMs)).build());
+                HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofMillis(timeoutMs))
+                        .build());
         factory.setReadTimeout(Duration.ofMillis(timeoutMs));
         this.client = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
     }
