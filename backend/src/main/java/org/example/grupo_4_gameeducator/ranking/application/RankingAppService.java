@@ -3,6 +3,7 @@ package org.example.grupo_4_gameeducator.ranking.application;
 import org.example.grupo_4_gameeducator.aluno.api.AlunoDTOs.AlunoResponse;
 import org.example.grupo_4_gameeducator.aluno.api.AlunoGateway;
 import org.example.grupo_4_gameeducator.ranking.api.RankingDTOs.RankingItemResponse;
+import org.example.grupo_4_gameeducator.ranking.domain.PontuacaoRanking;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -10,13 +11,11 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 /**
- * RF01 - Ranking. Somente leitura. Regra didatica de pontuacao (a validar com o grupo):
- * pontuacao = PESO_CURSO * totalCursos + saldoMoedas. Desempate por nome.
+ * RF01 - Ranking. Somente leitura. A regra de pontuacao vive no dominio ({@link PontuacaoRanking});
+ * este servico apenas ordena (desempate por nome) e monta a resposta.
  */
 @Service
 public class RankingAppService {
-
-    public static final int PESO_CURSO = 100;
 
     private final AlunoGateway alunos;
 
@@ -39,6 +38,6 @@ public class RankingAppService {
     }
 
     static int pontuacao(AlunoResponse aluno) {
-        return PESO_CURSO * aluno.totalCursos() + aluno.saldoMoedas();
+        return PontuacaoRanking.calcular(aluno.totalCursos(), aluno.saldoMoedas());
     }
 }
