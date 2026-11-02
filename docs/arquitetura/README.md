@@ -22,9 +22,11 @@ Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de tr
 | Modificabilidade | | ✅ | | | | |
 | Deploy independente | | | ✅ | | | |
 | Tolerância a falhas | | | ✅ | ✅ | | |
-| Interoperabilidade | | | ✅ | | | |
+| Interoperabilidade | | | ✅ | | ✅ |
 | Desacoplamento | | | | ✅ | | |
 | Recuperabilidade | | | | ✅ | | |
+| Tolerância à conectividade intermitente | | | | | ✅ | |
+| Eficiência de comunicação | | | | | ✅ | |
 
 ## Índice de ADRs
 
@@ -34,6 +36,7 @@ Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de tr
 | ADR-002 | Ports & Adapters no módulo `aluno` (persistência atrás de porta) | D2 |
 | ADR-003 | Serviço Python independente (FastAPI) para IA, com degradação | D3 |
 | ADR-004 | Eventos de domínio em processo + consumidor assíncrono (sem broker agora) | D4 |
+| ADR-005 | MQTT com gateway consumidor para eventos de dispositivos | D5 |
 
 ---
 
@@ -135,6 +138,7 @@ conquistas/   api · application · domain (Badge, RegrasConquistas) (D2, RF02) 
 recomendacao/ api · application (porta) · internal (adapter HTTP)  (D3)
 notificacoes/ api · application (porta) · internal (adapter)       (D4)
 shared/       web (ApiExceptionHandler) · config (AsyncConfig)
+iot/  api · application (porta) · domain · internal (adapter)  (D5)
 ```
 
 Regras de dependência (verificadas em `arquitetura/FronteirasModulosTest`):
@@ -518,3 +522,125 @@ sequenceDiagram
 A conclusão do curso é síncrona e consistente; a notificação é eventual, isolada e recuperável, sem introduzir broker. A decisão de **não** usar RabbitMQ/Kafka
 é deliberada e tem gatilhos explícitos. **Falta medir:** frequência real de falhas do consumidor e volume de eventos, para validar o adiamento do broker.
 
+
+---
+
+# Desafio 5 — IoT e MQTT
+
+## 1. Cenário
+
+Laboratórios passam a produzir eventos de presença, início e conclusão de atividades por dispositivos com recursos
+limitados e conexão instável. Esses eventos devem entrar na plataforma **sem** transformar o Core em um acoplamento
+direto com cada dispositivo.
+
+## 2. RF e RNF
+
+RF06 — receber eventos IoT e encaminhá-los ao ecossistema da plataforma.
+
+| RNF | ASR? | Como altera a arquitetura |
+|---|---|---|
+| Tolerância à conectividade intermitente | **SIM** | Dispositivos caem e voltam; define **mecanismo de entrega**: sessão persistente, QoS 1, ack só depois do Core aceitar. |
+| Eficiência de comunicação | **SIM** | Dispositivos de baixo poder: decide **o protocolo** (pub/sub leve com conexão persistente) em vez de um request HTTP completo por evento. |
+| Interoperabilidade | **SIM** | O Core não pode conhecer cada dispositivo: exige um **contrato de evento normalizado** e um componente de tradução (gateway) entre o protocolo do dispositivo e o Core. |
+| Segurança de integração | não agora | Relevante, mas não muda a estrutura: o laboratório roda sem TLS; em produção exige TLS (8883), autenticação e ACL por dispositivo (registrado como dívida técnica e gatilho de revisão). |
+| Escalabilidade | não agora | Sem medição de volume; o broker escala à parte se for preciso. |
+| Disponibilidade | coberta pela tolerância | O broker guarda os eventos enquanto o consumidor está fora. |
+
+## 3. RPC — restrições e premissas
+
+- Dispositivos podem ter baixo poder computacional (payload curto, pouca lógica, sem cliente HTTP pesado).
+- A conectividade pode ser intermitente.
+- Protocolo e broker **adicionam componentes operacionais** (equipe de 6 pessoas).
+- Core permanece Java/Spring Boot; operações do Core não podem depender da disponibilidade dos dispositivos.
+
+## 4. Decisão do Tech Lead
+
+- **REST é suficiente?** Não para este cenário. Cada evento exigiria conexão e cabeçalhos HTTP completos, o dispositivo teria de
+  implementar retry e fila por conta própria, e o Core ficaria exposto e acoplado à disponibilidade de cada dispositivo.
+- **O que o MQTT resolve especificamente?** Cabeçalho mínimo, conexão persistente, QoS (entrega confirmada), **sessão persistente**
+  (o broker guarda as mensagens de um assinante que está offline) e desacoplamento publicador/assinante.
+- **Existe motivo para outro broker depois do MQTT?** Não agora. O próprio broker MQTT já faz a fila entre dispositivos e gateway.
+  RabbitMQ só entraria se houvesse 2+ consumidores internos independentes com retry/DLQ próprios (os mesmos gatilhos do ADR-004).
+- **Duplicidade:** MQTT QoS 1 entrega "pelo menos uma vez", então há duplicatas. Em vez de QoS 2 (handshake caro para o dispositivo),
+  o Core é **idempotente por `eventoId`**.
+- **Perda:** sessão persistente + QoS 1 + ack manual do gateway (o broker só descarta a mensagem depois que o Core aceitou).
+  A perda residual é a de eventos que o dispositivo nunca conseguiu publicar (buffer offline do firmware, fora do laboratório).
+
+## 5. Alternativas e trade-offs
+
+| Alternativa | Benefícios | Custos / riscos | Avaliação |
+|---|---|---|---|
+| A — REST direto dos dispositivos ao Core | Sem broker novo; simples de entender. | Handshake e cabeçalhos pesados; retry e fila no dispositivo; Core acoplado a cada dispositivo e à sua conectividade. | Rejeitada: não atende eficiência nem tolerância à conectividade. |
+| **B — MQTT + gateway consumidor → Core** | Protocolo leve; broker guarda eventos com o consumidor fora; Core isolado do protocolo; contrato normalizado. | Dois componentes novos (broker e gateway); fila de pendentes do gateway ainda em memória. | **Escolhida.** |
+| C — MQTT + RabbitMQ/mensageria interna | Retry/DLQ e vários consumidores. | Terceiro componente operacional sem ASR que o justifique hoje. | Adiada: só com os gatilhos do ADR-004. |
+
+## 6. ADR-005 — MQTT com gateway consumidor para eventos de dispositivos
+
+| Campo | Registro |
+|---|---|
+| Status | Aceito |
+| Contexto | Dispositivos de laboratório (baixo poder, conexão instável) precisam entregar eventos sem acoplar o Core a eles. |
+| ASRs / RPCs | Tolerância à conectividade intermitente, eficiência de comunicação, interoperabilidade / baixo poder, conexão instável, componentes operacionais extras. |
+| Alternativas | A) REST direto; B) MQTT + gateway; C) MQTT + RabbitMQ. |
+| Decisão | Broker **Mosquitto**; tópico `labs/<laboratorio>/dispositivos/<dispositivo>/eventos`; **gateway Python** (`iot-gateway`) com sessão persistente, QoS 1 e ack manual, que traduz o payload compacto e chama `POST /api/iot/eventos`; no Core, módulo `iot` **idempotente por `eventoId`**, com porta de persistência. |
+| Consequências positivas | O Core não conhece dispositivos nem MQTT; eventos sobrevivem a Core ou gateway fora do ar; duplicatas são inofensivas. |
+| Trade-offs | Dois componentes operacionais novos; fila de pendentes em memória; laboratório sem TLS/autenticação; sem ordenação global garantida entre dispositivos. |
+| Gatilho de revisão | TLS + autenticação + ACL antes de produção; fila de pendentes persistente (outbox) se a perda do gateway for inaceitável; RabbitMQ se surgirem 2+ consumidores independentes. |
+
+## 7. C4 — Container (atualizado) e fluxo do evento
+
+```mermaid
+flowchart LR
+    DISP[Dispositivos do laboratório<br/>presença / início / conclusão]
+    BROKER[(Mosquitto<br/>broker MQTT)]
+    GW[iot-gateway<br/>Python]
+    subgraph CORE[Core Spring Boot]
+        IOT[módulo iot<br/>idempotente por eventoId]
+    end
+    DISP -- "MQTT QoS 1<br/>payload compacto" --> BROKER
+    BROKER -- "MQTT QoS 1<br/>sessão persistente" --> GW
+    GW -- "HTTP/JSON<br/>POST /api/iot/eventos" --> IOT
+```
+
+```mermaid
+sequenceDiagram
+    participant D as Dispositivo
+    participant B as Mosquitto
+    participant G as iot-gateway
+    participant C as Core (iot)
+    D->>B: PUBLISH QoS 1 {id, t, a, ts}
+    B-->>D: PUBACK
+    B->>G: PUBLISH QoS 1
+    G->>G: transforma em evento normalizado
+    G->>C: POST /api/iot/eventos
+    alt Core aceita
+        C-->>G: 201 (novo) ou 200 (duplicado)
+        G-->>B: PUBACK (só agora)
+    else Core fora do ar
+        G--xC: falha
+        Note over G,B: sem PUBACK: evento fica pendente e é reenviado
+    end
+```
+
+## 8. Mini-lab / evidência
+
+**Hipótese:** o gateway isola o Core do protocolo e dos dispositivos, e a combinação QoS 1 + sessão persistente + ack manual +
+idempotência mantém os eventos mesmo com o Core ou o gateway fora do ar.
+
+Componentes: `iot-gateway/` (gateway, simulador, `mosquitto.conf`), `docker-compose.yml` (serviços `mosquitto` e `iot-gateway`) e o
+módulo `iot` do Core (`POST/GET /api/iot/eventos`). Como reproduzir: ver `iot-gateway/README.md`.
+
+| Cenário | Resultado esperado | Evidência |
+|---|---|---|
+| Simulador publica presença, início e conclusão; o gateway consome e transforma | 3 eventos `REGISTRADO` no Core | ![d5-1-simulador-e-gateway.png](evidencias/d5-1-simulador-e-gateway.png) |
+| Mesmo evento de conclusão publicado duas vezes (duplicidade) | 2º envio devolve `DUPLICADO`; o Core mantém um só registro | ![d5-2-core-eventos.png](evidencias/d5-2-core-eventos.png) |
+| **Core fora do ar** | Gateway registra `PENDENTE` (sem ack); ao voltar o Core, "Reenvio: 1 evento(s) entregue(s)" | ![d5-3-core-fora.png](evidencias/d5-3-core-fora.png) |
+| **Gateway fora do ar** | O broker guarda o evento; ao voltar, o gateway o entrega ao Core | ![d5-4-gateway-fora.png](evidencias/d5-4-gateway-fora.png) |
+| Testes automatizados | `iot-gateway`: 29 testes pytest; Core: testes do módulo `iot` e fronteiras (ArchUnit) | ![d5-5-pytest.png](evidencias/d5-5-pytest.png) |
+
+## 9. Conclusão
+
+REST direto não protege os dispositivos nem o Core; o MQTT resolve o problema real (conexão instável, baixo poder) e o gateway mantém o
+Core isolado do protocolo. Um segundo broker (RabbitMQ) **não** se justifica hoje. **Falta medir:** latência fim a fim e volume por
+laboratório, e **fechar a segurança** (TLS, autenticação, ACL) antes de produção. O Core hoje **registra** os eventos; encaminhá-los ao fluxo de
+conquistas (por exemplo, `CONCLUSAO_ATIVIDADE` concluindo um curso) é a próxima evolução.
