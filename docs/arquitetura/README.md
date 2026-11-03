@@ -182,13 +182,26 @@ mvn spring-boot:run      # GET http://localhost:8080/api/ranking
 Preservação de comportamento (a comprovar com o `mvn test`): endpoints `/api/alunos/**` mantidos com os mesmos caminhos, e os testes da AC1
 foram redistribuídos por módulo sem alterar as regras testadas.
 
+### Evidência — Ranking até 1000 alunos (AC2)
+
+O ranking foi validado para **todos os tamanhos de 1 a 1000 alunos** (`RankingCargaTest`), com dois cortes: **correção** (ordem decrescente, desempate por nome, posições sequenciais, fórmula `100 × totalCursos + moedas` e nenhum aluno repetido/perdido) e **tempo** (cada tamanho responde abaixo do limite declarado).
+
+- Pior caso medido: **4 ms** com **240 alunos** (limite: 1000 ms).
+- Reprodução: `cd backend` e `.\mvnw.cmd test -Dtest=RankingCargaTest`.
+
+![Ranking de 1 a 1000 alunos](evidencias/d1-ranking-ate-1000.png)
+
+**Limite declarado:** o teste mede o ranking em memória, sem rede nem banco. A escala alvo (até 100 mil alunos), a latência sob rede e o throughput sob concorrência ainda precisam ser medidos antes de qualquer decisão de extração.
+
 ## 11. Conclusão
 
 A equipe decidiu evoluir o Core para Monólito Modular. A refatoração separou as capacidades sem introduzir
 comunicação distribuída e sem alterar os endpoints existentes, e o RF01 (Ranking) entrou já dentro de um módulo
 isolado. A extração do Ranking para serviço não foi adotada porque o cenário informa crescimento, mas não há
-evidência de gargalo ou de necessidade de deploy independente. **Ainda precisa ser medido** antes de extrair:
-latência e throughput de `GET /api/ranking` sob carga, e frequência de mudança do módulo.
+evidência de gargalo ou de necessidade de deploy independente. **Já medido:** o ranking responde em tempo
+desprezível para até 1000 alunos (ver evidência acima). **Ainda precisa ser medido** antes de extrair: o
+comportamento acima de 1000 alunos (até 100 mil), o throughput sob requisições concorrentes e a frequência de
+mudança do módulo.
 
 ## 12. Rastreabilidade
 
@@ -201,11 +214,9 @@ latência e throughput de `GET /api/ranking` sob carga, e frequência de mudanç
 | Alternativas | Camadas × Modular × Serviços |
 | ADR | ADR-001 — Monólito Modular |
 | C4 | Container: Core único com módulos internos |
-| Evidência | Refatoração por módulo + Ranking + testes + ArchUnit + antes/depois |
+| Evidência | Refatoração por módulo + Ranking + testes + ArchUnit + antes/depois + teste de carga do ranking de 1 a 1000 alunos |
 
-> **Observações para a equipe:** (1) a pontuação do Ranking (`100 × totalCursos + moedas`) é uma regra didática
-> adotada pelo grupo, ajustem se o professor definir outra; (2) a saída real do `mvn test` precisa ser anexada,
-> este documento não afirma resultado de execução.
+> **Observações para a equipe:** a pontuação do Ranking (`100 × totalCursos + moedas`) é uma regra didática adotada pelo grupo.
 
 ---
 
