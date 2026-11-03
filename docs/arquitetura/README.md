@@ -3,30 +3,30 @@
 Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de trás para frente:
 **C4 ← ADR ← ASR + RPC ← RF/RNF**, com a evidência sustentando o raciocínio.
 
-- Equipe: Fernanda Theodoro Casali- 235329 /
+- Equipe: Fernanda Theodoro Casali - 235329 /
   Carolina Leamari - 235249 /
   Eduarda Gomes Abreu e Almeida - 236021
 - Repositório: https://github.com/FernandaCasali/Grupo_4_GameEducator.git
-- Branch do B1: `b1-architecture-lab`
+- Branch do B1: `b1-architecture-part2`
 
 ---
 
 ## Matriz cumulativa de ASRs
 
 | ASR | D1 Core | D2 Organização | D3 IA | D4 Eventos | D5 IoT | D6 CI/CD |
-|---|---|---|---|---|---|---|
-| Manutenibilidade | ✅ | ✅ | | | | |
-| Escalabilidade | ✅ | | | | | |
-| Complexidade operacional | ✅ | | | | | |
-| Testabilidade | | ✅ | | | | |
-| Modificabilidade | | ✅ | | | | |
-| Deploy independente | | | ✅ | | | |
-| Tolerância a falhas | | | ✅ | ✅ | | |
-| Interoperabilidade | | | ✅ | | ✅ | |
-| Desacoplamento | | | | ✅ | | |
-| Recuperabilidade | | | | ✅ | | |
-| Tolerância à conectividade intermitente | | | | | ✅ | |
-| Eficiência de comunicação | | | | | ✅ | |
+|---|---|---|---|---|---|----------|
+| Manutenibilidade | ✅ | ✅ | | | |          |
+| Escalabilidade | ✅ | | | | |          |
+| Complexidade operacional | ✅ | | | | |          |
+| Testabilidade | | ✅ | | | |          |
+| Modificabilidade | | ✅ | | | |          |
+| Deploy independente | | | ✅ | | |          |
+| Tolerância a falhas | | | ✅ | ✅ | |          |
+| Interoperabilidade | | | ✅ | | ✅ | ✅        |
+| Desacoplamento | | | | ✅ | |          |
+| Recuperabilidade | | | | ✅ | |          |
+| Tolerância à conectividade intermitente | | | | | ✅ |          |
+| Eficiência de comunicação | | | | | ✅ |          |
 
 ## Índice de ADRs
 
@@ -163,7 +163,7 @@ Arquivos de apoio:
 
 - `evidencias/antes-estrutura.txt` e `evidencias/depois-estrutura.txt` — árvore de classes.
 - `evidencias/depois-testes.txt` — árvore de testes.
-- `evidencias/` — **colar aqui** a saída do `mvn test` e o relatório JaCoCo após rodar (ver abaixo).
+- `evidencias/mvn-test.png` — saída do `mvn test` (testes passando, incluindo ArchUnit).
 
 ![mvn-test.png](evidencias/mvn-test.png)
 
@@ -182,13 +182,26 @@ mvn spring-boot:run      # GET http://localhost:8080/api/ranking
 Preservação de comportamento (a comprovar com o `mvn test`): endpoints `/api/alunos/**` mantidos com os mesmos caminhos, e os testes da AC1
 foram redistribuídos por módulo sem alterar as regras testadas.
 
+### Evidência — Ranking até 1000 alunos (AC2)
+
+O ranking foi validado para **todos os tamanhos de 1 a 1000 alunos** (`RankingCargaTest`), com dois cortes: **correção** (ordem decrescente, desempate por nome, posições sequenciais, fórmula `100 × totalCursos + moedas` e nenhum aluno repetido/perdido) e **tempo** (cada tamanho responde abaixo do limite declarado).
+
+- Pior caso medido: **4 ms** com **240 alunos** (limite: 1000 ms).
+- Reprodução: `cd backend` e `.\mvnw.cmd test -Dtest=RankingCargaTest`.
+
+![Ranking de 1 a 1000 alunos](evidencias/d1-ranking-ate-1000.png)
+
+**Limite declarado:** o teste mede o ranking em memória, sem rede nem banco. A escala alvo (até 100 mil alunos), a latência sob rede e o throughput sob concorrência ainda precisam ser medidos antes de qualquer decisão de extração.
+
 ## 11. Conclusão
 
 A equipe decidiu evoluir o Core para Monólito Modular. A refatoração separou as capacidades sem introduzir
 comunicação distribuída e sem alterar os endpoints existentes, e o RF01 (Ranking) entrou já dentro de um módulo
 isolado. A extração do Ranking para serviço não foi adotada porque o cenário informa crescimento, mas não há
-evidência de gargalo ou de necessidade de deploy independente. **Ainda precisa ser medido** antes de extrair:
-latência e throughput de `GET /api/ranking` sob carga, e frequência de mudança do módulo.
+evidência de gargalo ou de necessidade de deploy independente. **Já medido:** o ranking responde em tempo
+desprezível para até 1000 alunos (ver evidência acima). **Ainda precisa ser medido** antes de extrair: o
+comportamento acima de 1000 alunos (até 100 mil), o throughput sob requisições concorrentes e a frequência de
+mudança do módulo.
 
 ## 12. Rastreabilidade
 
@@ -201,11 +214,9 @@ latência e throughput de `GET /api/ranking` sob carga, e frequência de mudanç
 | Alternativas | Camadas × Modular × Serviços |
 | ADR | ADR-001 — Monólito Modular |
 | C4 | Container: Core único com módulos internos |
-| Evidência | Refatoração por módulo + Ranking + testes + ArchUnit + antes/depois |
+| Evidência | Refatoração por módulo + Ranking + testes + ArchUnit + antes/depois + teste de carga do ranking de 1 a 1000 alunos |
 
-> **Observações para a equipe:** (1) a pontuação do Ranking (`100 × totalCursos + moedas`) é uma regra didática
-> adotada pelo grupo, ajustem se o professor definir outra; (2) a saída real do `mvn test` precisa ser anexada,
-> este documento não afirma resultado de execução.
+> **Observações para a equipe:** a pontuação do Ranking (`100 × totalCursos + moedas`) é uma regra didática adotada pelo grupo.
 
 ---
 
@@ -644,3 +655,93 @@ REST direto não protege os dispositivos nem o Core; o MQTT resolve o problema r
 Core isolado do protocolo. Um segundo broker (RabbitMQ) **não** se justifica hoje. **Falta medir:** latência fim a fim e volume por
 laboratório, e **fechar a segurança** (TLS, autenticação, ACL) antes de produção. O Core hoje **registra** os eventos; encaminhá-los ao fluxo de
 conquistas (por exemplo, `CONCLUSAO_ATIVIDADE` concluindo um curso) é a próxima evolução.
+
+
+
+---
+
+# Fechamento do B1 — Visão consolidada
+
+## C4 — Container final (D1 a D5)
+
+Visão integrada das decisões dos cinco desafios já aceitos. O **Desafio 6 (CI/CD e
+observabilidade)** será incorporado ao diagrama quando o ADR-006 for aceito.
+
+```mermaid
+flowchart LR
+    U[Aluno / Administrador] --> FE[Front-end Vue]
+    FE -->|REST /api| CORE
+    subgraph CORE[Core Spring Boot - Monolito Modular]
+        direction TB
+        AL[aluno]
+        CU[cursos] -->|evento CursoConcluido<br/>em processo| NO[notificacoes]
+        MO[moedas]
+        RK[ranking]
+        CQ[conquistas]
+        RE[recomendacao<br/>porta + adapter HTTP]
+        IOT[iot<br/>idempotente por eventoId]
+        CU --> AL
+        MO --> AL
+        RK --> AL
+        CQ --> AL
+        RE --> AL
+    end
+    CORE -->|JPA| DB[(PostgreSQL)]
+    RE -->|HTTP/JSON<br/>timeout 1,5 s| IA[ia-service<br/>Python / FastAPI]
+    IA -.->|futuro: RAG| LLM[(LLM / base vetorial)]
+    DISP[Dispositivos do laboratorio] -- "MQTT QoS 1" --> BROKER[(Mosquitto)]
+    BROKER -- "MQTT QoS 1<br/>sessao persistente" --> GW[iot-gateway<br/>Python]
+    GW -- "HTTP/JSON<br/>POST /api/iot/eventos" --> IOT
+```
+
+Legenda das fronteiras (confirmadas por `FronteirasModulosTest`):
+
+- **Monólito Modular** (D1 / ADR-001): um único deploy, módulos conversam só pelos `api` públicos.
+- **Ports & Adapters** no módulo `aluno` (D2 / ADR-002): persistência atrás da porta `AlunoRepositorio`.
+- **Serviço Python** (D3 / ADR-003): IA fora do Core, HTTP/JSON com timeout e fallback degradado.
+- **Eventos de domínio em processo** (D4 / ADR-004): `cursos` publica `CursoConcluidoEvent`; `notificacoes` consome `@Async`, sem broker.
+- **MQTT + gateway** (D5 / ADR-005): dispositivos entram no Core por `iot-gateway`, idempotência por `eventoId`.
+
+## Síntese final das decisões para a PoC da AF
+
+A arquitetura entregue no B1 é a que o grupo leva para a PoC da AF. A linha condutora é
+**decidir por evidência, não por catálogo**: cada ADR nasceu de ASRs priorizados contra RPCs
+reais (equipe de 6 pessoas, Java 21/Spring Boot, banco relacional, legado da AC1 preservado) e
+cada “não” (sem microsserviços, sem broker, sem Clean completo, sem outro protocolo além de
+HTTP e MQTT) tem gatilho explícito de revisão.
+
+| # | Decisão (ADR) | O que vai para a PoC | Gatilho que faria mudar |
+|---|---|---|---|
+| D1 / ADR-001 | Core em **Monólito Modular** com módulos `aluno`, `cursos`, `moedas`, `ranking`, `conquistas`, `recomendacao`, `notificacoes`, `iot`. | Um único deploy do Core; Ranking já isolável; teste de carga do ranking de 1 a 1000 alunos valida o módulo. | Métricas mostrando gargalo no `GET /api/ranking` ou cadência de deploy do Ranking conflitando com o restante. |
+| D2 / ADR-002 | **Ports & Adapters** no `aluno` (porta `AlunoRepositorio`, adapter JPA, adapter em memória para testes). | Casos de uso sem Spring/JPA, regras de domínio puras, troca de persistência confinada ao adapter. | Latência da dupla leitura (`buscar` + `salvar`) aparecer nas métricas. |
+| D3 / ADR-003 | **`ia-service` Python (FastAPI)** chamado por HTTP/JSON síncrono, com timeout de 1,5 s e degradação transparente. | Recomendação disponível com o Core isolado da falha da IA; contrato independente de linguagem; caminho pronto para o RAG (RF04) sem tocar no Core. | Separar ML de RAG se latência/custo/ciclo divergirem; trocar HTTP por fila se virar lote. |
+| D4 / ADR-004 | **Eventos de domínio em processo + consumidor `@Async`** (sem broker); reenvio manual de notificações. | Conclusão de curso continua síncrona e consistente; notificação é eventual, isolada e recuperável. | Notificação virar serviço externo, perda de evento ser inaceitável ou surgirem 2+ consumidores independentes → outbox + RabbitMQ. |
+| D5 / ADR-005 | **MQTT (Mosquitto) + `iot-gateway` Python** com QoS 1, sessão persistente, ack manual e idempotência por `eventoId` no Core. | Dispositivos entram sem acoplar o Core ao protocolo nem à conectividade deles; eventos sobrevivem a Core ou gateway fora do ar. | TLS/auth/ACL antes de produção; fila de pendentes persistente; RabbitMQ só se vierem 2+ consumidores. |
+| D6 / ADR-006 | **Pendente** — CI/CD e observabilidade (responsável: Eduarda). | A definir no ADR-006. | A definir. |
+
+### O que ainda precisa ser medido
+
+Lista unificada do que cada ADR deixou como “falta medir”, para a PoC decidir onde investir
+observabilidade primeiro:
+
+- **D1**: comportamento do ranking acima de 1000 alunos (até 100 mil), throughput sob concorrência e frequência de mudança do módulo.
+- **D2**: custo real da dupla leitura por atualização.
+- **D3**: latência de inferência e taxa de indisponibilidade do `ia-service` (para validar o timeout de 1,5 s).
+- **D4**: frequência de falha do consumidor e volume de eventos (para validar o adiamento do broker).
+- **D5**: latência fim a fim e volume por laboratório; segurança (TLS, autenticação e ACL) antes de produção.
+
+## Checagem da entrega
+
+| Item | Onde conferir | Status |
+|---|---|---|
+| Nomes da equipe e matrículas | Cabeçalho deste README | Fernanda Theodoro Casali – 235329 · Carolina Leamari – 235249 · Eduarda Gomes Abreu e Almeida – 236021 |
+| Repositório | https://github.com/FernandaCasali/Grupo_4_GameEducator | Público |
+| Branch do B1 | `b1-architecture-lab` (consolidada) | Confirmar com o grupo |
+| ADRs aceitos | ADR-001 (D1), ADR-002 (D2), ADR-003 (D3), ADR-004 (D4), ADR-005 (D5) | Todos no índice de ADRs |
+| ADR pendente | ADR-006 (D6 · CI/CD e observabilidade) | A entregar pela Eduarda |
+| Evidências do D1 | `evidencias/mvn-test.png`, `evidencias/d1-ranking-swagger.png`, `evidencias/d1-ranking-ate-1000.png` | Anexadas |
+| Evidências do D2 | `evidencias/d2-testes-sem-infra.png`, `evidencias/antes-estrutura.txt`, `evidencias/depois-estrutura.txt`, `evidencias/depois-testes.txt` | Anexadas |
+| Evidências do D3 | `evidencias/d3-1-ia-fora-degradado.png`, `evidencias/d3-2-ia-no-ar.png`, `evidencias/d3-demo-ia-service.txt`, `evidencias/d3-pytest-ia-service.txt` | Anexadas |
+| Evidências do D4 | `evidencias/d4-1-conclusao-ok.png`, `evidencias/d4-2-notificacao-falhou.png`, `evidencias/d4-3-reenvio.png`, `evidencias/d4-4-notificacao-enviada.png` | Anexadas |
+| Evidências do D5 | `evidencias/d5-1-simulador-e-gateway.png`, `evidencias/d5-2-core-eventos.png`, `evidencias/d5-3-core-fora.png`, `evidencias/d5-4-gateway-fora.png`, `evidencias/d5-5-pytest.png` | Anexadas |
+| Evidências do D6 | A anexar pela Eduarda | Pendente |
