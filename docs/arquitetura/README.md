@@ -14,19 +14,19 @@ Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de tr
 ## Matriz cumulativa de ASRs
 
 | ASR | D1 Core | D2 Organização | D3 IA | D4 Eventos | D5 IoT | D6 CI/CD |
-|---|---|---|---|---|---|---|
-| Manutenibilidade | ✅ | ✅ | | | | |
-| Escalabilidade | ✅ | | | | | |
-| Complexidade operacional | ✅ | | | | | |
-| Testabilidade | | ✅ | | | | |
-| Modificabilidade | | ✅ | | | | |
-| Deploy independente | | | ✅ | | | |
-| Tolerância a falhas | | | ✅ | ✅ | | |
-| Interoperabilidade | | | ✅ | | ✅ | |
-| Desacoplamento | | | | ✅ | | |
-| Recuperabilidade | | | | ✅ | | |
-| Tolerância à conectividade intermitente | | | | | ✅ | |
-| Eficiência de comunicação | | | | | ✅ | |
+|---|---|---|---|---|---|----------|
+| Manutenibilidade | ✅ | ✅ | | | |          |
+| Escalabilidade | ✅ | | | | |          |
+| Complexidade operacional | ✅ | | | | |          |
+| Testabilidade | | ✅ | | | |          |
+| Modificabilidade | | ✅ | | | |          |
+| Deploy independente | | | ✅ | | |          |
+| Tolerância a falhas | | | ✅ | ✅ | |          |
+| Interoperabilidade | | | ✅ | | ✅ | ✅        |
+| Desacoplamento | | | | ✅ | |          |
+| Recuperabilidade | | | | ✅ | |          |
+| Tolerância à conectividade intermitente | | | | | ✅ |          |
+| Eficiência de comunicação | | | | | ✅ |          |
 
 ## Índice de ADRs
 
@@ -163,7 +163,7 @@ Arquivos de apoio:
 
 - `evidencias/antes-estrutura.txt` e `evidencias/depois-estrutura.txt` — árvore de classes.
 - `evidencias/depois-testes.txt` — árvore de testes.
-- `evidencias/` — **colar aqui** a saída do `mvn test` e o relatório JaCoCo após rodar (ver abaixo).
+- `evidencias/mvn-test.png` — saída do `mvn test` (testes passando, incluindo ArchUnit).
 
 ![mvn-test.png](evidencias/mvn-test.png)
 
