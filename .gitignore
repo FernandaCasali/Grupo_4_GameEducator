@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Python ###
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+relatorio-pytest.xml
+node_modules/
