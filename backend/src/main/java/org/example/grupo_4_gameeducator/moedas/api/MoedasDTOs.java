@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 
 public class MoedasDTOs {
 
+    private MoedasDTOs() {
+        // so agrupa records; nao deve ser instanciada (JaCoCo ignora construtor privado vazio)
+    }
+
     public record CreditarMoedasRequest(
             @Min(value = 1, message = "quantidade deve ser maior que zero") int quantidade,
             @NotBlank(message = "motivo e obrigatorio") String motivo
