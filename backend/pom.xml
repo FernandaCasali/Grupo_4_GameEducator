@@ -46,6 +46,16 @@
         </dependency>
 
         <!-- ArchUnit: testes que verificam as fronteiras entre modulos (B1 / Desafio 1) -->
+        <!-- D6 / Observabilidade: Actuator expoe /actuator/*, Micrometer formata as metricas para o Prometheus -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
@@ -96,11 +106,47 @@
                 <executions>
                     <execution>
                         <goals><goal>prepare-agent</goal></goals>
+                        <configuration>
+                            <!-- instrumenta so o codigo do projeto (evita avisos do JDK 25 nas classes internas do Java) -->
+                            <includes>
+                                <include>org/example/**</include>
+                            </includes>
+                            <!-- classes geradas em tempo de execucao pelo Mockito e pelo Hibernate (nao sao codigo do projeto) -->
+                            <excludes>
+                                <exclude>*MockitoMock*</exclude>
+                                <exclude>*$Hibernate*</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
                         <goals><goal>report</goal></goals>
+                    </execution>
+                    <!-- D6 / portao de qualidade: "mvn verify" FALHA se linha ou branch ficar abaixo de 100% -->
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals><goal>check</goal></goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>1.00</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>1.00</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

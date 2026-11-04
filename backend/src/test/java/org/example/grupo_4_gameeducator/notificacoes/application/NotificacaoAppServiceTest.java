@@ -84,4 +84,15 @@ class NotificacaoAppServiceTest {
         assertEquals("Carolina, voce concluiu Redes.", NotificacaoAppService.montarMensagem(
                 new CursoConcluidoEvent(1L, "Carolina", "Redes", 5.0, 0, false)));
     }
+
+    @Test
+    void reenvioIgnoraNotificacoesQueJaForamEnviadas() {
+        service.tratar(evento); // ENVIADA
+
+        int recuperadas = service.reenviarFalhas();
+
+        assertEquals(0, recuperadas);
+        assertEquals(1, notificador.enviadas); // nao reenviou o que ja tinha ido
+        assertEquals(Status.ENVIADA, service.listar().get(0).status());
+    }
 }
