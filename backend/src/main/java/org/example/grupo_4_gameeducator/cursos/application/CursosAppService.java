@@ -1,5 +1,6 @@
 package org.example.grupo_4_gameeducator.cursos.application;
 
+import io.micrometer.core.instrument.Metrics;
 import org.example.grupo_4_gameeducator.aluno.api.AlunoDTOs.AlunoResponse;
 import org.example.grupo_4_gameeducator.aluno.api.AlunoGateway;
 import org.example.grupo_4_gameeducator.aluno.domain.Aluno;
@@ -40,6 +41,9 @@ public class CursosAppService {
             desbloqueio.processarDesbloqueio(aluno, curso, request.media());
             liberados[0] = aluno.getCursosDesbloqueados().size() - antes;
         });
+
+        // D6 - metrica de negocio (Prometheus: gameeducator_cursos_desbloqueados_total)
+        Metrics.counter("gameeducator.cursos.desbloqueados").increment(liberados[0]);
 
         publicar(new CursoConcluidoEvent(
                 alunoId,

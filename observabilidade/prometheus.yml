@@ -1,0 +1,9 @@
+# Prometheus: a cada 5s busca as metricas da API Spring Boot
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: gameeducator-api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["app:8080"]   # "app" e o nome do servico no docker-compose
