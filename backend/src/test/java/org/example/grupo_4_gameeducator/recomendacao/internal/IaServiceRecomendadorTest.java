@@ -65,4 +65,22 @@ class IaServiceRecomendadorTest {
 
         assertThrows(RecomendadorIndisponivelException.class, () -> adapter.recomendar(1L, List.of()));
     }
+
+    @Test
+    void deveRetornarListaVaziaQuandoIaServiceRespondeSemCorpo() throws Exception {
+        String url = subir(200, "");
+
+        var sugestoes = new IaServiceRecomendador(url, 1000).recomendar(1L, List.of("Logica"));
+
+        assertTrue(sugestoes.isEmpty());
+    }
+
+    @Test
+    void deveRetornarListaVaziaQuandoRespostaNaoTrazRecomendacoes() throws Exception {
+        String url = subir(200, "{\"modelo\":\"regras-trilha-v1\"}");
+
+        var sugestoes = new IaServiceRecomendador(url, 1000).recomendar(1L, List.of("Logica"));
+
+        assertTrue(sugestoes.isEmpty());
+    }
 }
