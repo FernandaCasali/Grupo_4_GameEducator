@@ -82,6 +82,33 @@ services:
       - mosquitto
       - app
 
+  # B1 / Desafio 6: observabilidade. Prometheus coleta as metricas do Core; Grafana mostra os dashboards.
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: gamificacao-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observabilidade/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: gamificacao-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./observabilidade/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observabilidade/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:
   mosquitto_data:

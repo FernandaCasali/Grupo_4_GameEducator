@@ -1,0 +1,8 @@
+# Carrega os dashboards .json da pasta /var/lib/grafana/dashboards
+apiVersion: 1
+providers:
+  - name: GameEducator
+    folder: GameEducator
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
