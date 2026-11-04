@@ -14,19 +14,22 @@ Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de tr
 ## Matriz cumulativa de ASRs
 
 | ASR | D1 Core | D2 Organização | D3 IA | D4 Eventos | D5 IoT | D6 CI/CD |
-|---|---|---|---|---|---|----------|
-| Manutenibilidade | ✅ | ✅ | | | |          |
-| Escalabilidade | ✅ | | | | |          |
-| Complexidade operacional | ✅ | | | | |          |
-| Testabilidade | | ✅ | | | |          |
-| Modificabilidade | | ✅ | | | |          |
-| Deploy independente | | | ✅ | | |          |
-| Tolerância a falhas | | | ✅ | ✅ | |          |
-| Interoperabilidade | | | ✅ | | ✅ | ✅        |
-| Desacoplamento | | | | ✅ | |          |
-| Recuperabilidade | | | | ✅ | |          |
-| Tolerância à conectividade intermitente | | | | | ✅ |          |
-| Eficiência de comunicação | | | | | ✅ |          |
+|---|---|---|---|---|---|---|
+| Manutenibilidade | ✅ | ✅ | | | | |
+| Escalabilidade | ✅ | | | | | |
+| Complexidade operacional | ✅ | | | | | |
+| Testabilidade | | ✅ | | | | ✅ |
+| Modificabilidade | | ✅ | | | | |
+| Deploy independente | | | ✅ | | | |
+| Tolerância a falhas | | | ✅ | ✅ | | |
+| Interoperabilidade | | | ✅ | | ✅ | |
+| Desacoplamento | | | | ✅ | | |
+| Recuperabilidade | | | | ✅ | | |
+| Tolerância à conectividade intermitente | | | | | ✅ | |
+| Eficiência de comunicação | | | | | ✅ | |
+| Confiabilidade da entrega | | | | | | ✅ |
+| Feedback rápido | | | | | | ✅ |
+| Observabilidade | | | | | | ✅ |
 
 ## Índice de ADRs
 
@@ -37,6 +40,7 @@ Registro cumulativo. Cada desafio acrescenta uma seção. Regra de leitura de tr
 | ADR-003 | Serviço Python independente (FastAPI) para IA, com degradação | D3 |
 | ADR-004 | Eventos de domínio em processo + consumidor assíncrono (sem broker agora) | D4 |
 | ADR-005 | MQTT com gateway consumidor para eventos de dispositivos | D5 |
+| ADR-006 | Pipeline Jenkins com portões por componente + observabilidade com Prometheus/Grafana | D6 |
 
 ---
 
@@ -611,6 +615,11 @@ flowchart LR
     DISP -- "MQTT QoS 1<br/>payload compacto" --> BROKER
     BROKER -- "MQTT QoS 1<br/>sessão persistente" --> GW
     GW -- "HTTP/JSON<br/>POST /api/iot/eventos" --> IOT
+    PROM[Prometheus] -->|coleta /actuator/prometheus| CORE
+    GRAF[Grafana] -->|PromQL| PROM
+    JEN[Jenkins<br/>Jenkinsfile] -.->|build + testes + cobertura 100%| CORE
+    JEN -.->|pytest| IA
+    JEN -.->|pytest| GW
 ```
 
 ```mermaid
@@ -660,12 +669,168 @@ conquistas (por exemplo, `CONCLUSAO_ATIVIDADE` concluindo um curso) é a próxim
 
 ---
 
+# Desafio 6 — CI/CD e observabilidade
+
+## 1. Cenário
+
+Depois do D3 e do D5, o repositório tem **três componentes com linguagens e ciclos diferentes**: o Core (Java/Spring Boot),
+o `ia-service` (Python/FastAPI) e o `iot-gateway` (Python/MQTT). As decisões do D1–D5 dependem de duas coisas que ainda
+eram manuais: **as fronteiras e os testes só valem se forem verificados a cada mudança**, e **todos os desafios terminam com
+"falta medir"**, mas o Core não expunha nenhuma métrica.
+Pergunta: **como garantir que toda mudança seja construída e testada do mesmo jeito, e como passar a medir em vez de supor?**
+
+## 2. RF afetados
+
+Nenhum RF novo. O D6 protege e mede os anteriores (RF01–RF06): nenhum pode quebrar sem o pipeline acusar, e os fluxos
+principais (ranking, moedas, conclusão de curso) passam a ter métricas.
+
+## 3. RNF e seleção de ASRs
+
+| RNF | ASR? | Como altera a arquitetura |
+|---|---|---|
+| Confiabilidade da entrega | **SIM** | Toda mudança passa pelos **mesmos portões automáticos** (testes, ArchUnit, cobertura 100%); a verificação vive no repositório (`Jenkinsfile`), não na IDE de cada um. |
+| Feedback rápido | **SIM** | Três componentes independentes: os testes rodam **em paralelo**, um estágio por componente; o estágio vermelho aponta onde quebrou. |
+| Testabilidade | **SIM** | Os testes que provam as decisões (ArchUnit, adapters fake, mocks, pytest) viram **condição para o build passar**. |
+| Observabilidade | **SIM** | O Core passa a **expor métricas** (`/actuator/prometheus`) e ganha dois componentes operacionais: Prometheus (coleta) e Grafana (visualização). |
+| Rastreabilidade | incorporada à confiabilidade | Cada build guarda resultado dos testes, cobertura e artefato com fingerprint. |
+| Deploy contínuo em produção | não agora | Não há ambiente de produção no laboratório. |
+
+## 4. RPC — restrições e premissas
+
+- **Jenkins** é a ferramenta da disciplina e roda localmente (Windows), sem nuvem.
+- Monorepo com 3 componentes: Java 21/Maven e Python 3 com `pytest`; o agente precisa de JDK/Maven e Python no PATH; Docker é opcional.
+- Equipe de 6: ferramentas prontas e simples de manter, sem desenvolver infraestrutura própria.
+- Monitoramento **não pode** virar dependência do Core: se Prometheus/Grafana caírem, o Core continua funcionando.
+- As fronteiras do ADR-001/002 continuam valendo (métricas não podem acoplar módulos).
+
+## 5. Alternativas e trade-offs
+
+**CI/CD**
+
+| Alternativa | Benefícios | Custos / riscos | Avaliação |
+|---|---|---|---|
+| A — Build e testes manuais (IDE/terminal) | Zero configuração. | Depende de cada um lembrar; "na minha máquina funciona"; fronteiras e cobertura sem garantia. | Rejeitada. |
+| **B — Um pipeline do monorepo (Jenkinsfile) com estágios paralelos por componente** | Um arquivo versionado; mesmos portões para todos; paralelo = feedback rápido. | Uma mudança só no Python também roda os testes do Java. | **Escolhida.** |
+| C — Um pipeline por componente | Deploy realmente independente; só roda o que mudou. | Mais configuração e manutenção; sem evidência de que o tempo de build seja problema. | Adiada (gatilho). |
+| D — GitHub Actions | Sem servidor próprio. | Fora da RPC (disciplina usa Jenkins). | Rejeitada pela restrição. |
+
+**Observabilidade**
+
+| Alternativa | Benefícios | Custos / riscos | Avaliação |
+|---|---|---|---|
+| A — Só logs | Nada novo. | Não dá latência p95, taxa de erro nem tendência; difícil comparar. | Rejeitada. |
+| **B — Actuator + Micrometer + Prometheus + Grafana** | Padrão do ecossistema Spring; métricas técnicas prontas (HTTP, JVM); dashboard provisionado por arquivo. | Dois containers a mais; endpoint de métricas aberto no laboratório. | **Escolhida.** |
+| C — APM pago/SaaS | Tracing e alertas prontos. | Custo, conta externa, dados fora do ambiente. | Rejeitada. |
+
+## 6. ADR-006 — Pipeline Jenkins com portões por componente + observabilidade com Prometheus/Grafana
+
+| Campo | Registro |
+|---|---|
+| Status | Aceito |
+| Contexto | Três componentes no mesmo repositório; fronteiras, testes e cobertura dependiam de execução manual; nenhum desafio conseguia medir o que deixou como "falta medir". |
+| ASRs / RPCs | Confiabilidade da entrega, feedback rápido, testabilidade, observabilidade / Jenkins local, monorepo Java + Python, equipe de 6, Core independente do monitoramento. |
+| Alternativas | CI/CD: A) manual; B) pipeline único com estágios paralelos; C) pipeline por componente; D) GitHub Actions. Observabilidade: A) logs; B) Prometheus + Grafana; C) APM. |
+| Decisão | **CI/CD:** `Jenkinsfile` na raiz — Checkout → **Testes por componente (paralelo)**: Core `mvn clean verify` (JUnit + ArchUnit + `jacoco:check` com mínimo de **100%** de linha e branch), `ia-service` e `iot-gateway` com `pytest` em ambiente virtual → arquivamento do jar → imagens Docker (opcional, parâmetro `CONSTRUIR_IMAGENS`). **Observabilidade:** Actuator + Micrometer expõem `/actuator/prometheus`; Prometheus coleta a cada 5 s; Grafana com datasource e dashboard **provisionados por arquivo** (`observabilidade/`). |
+| Consequências positivas | Fronteiras (ADR-001/002) e cobertura viram portão automático; quebra em qualquer componente aparece no estágio dele; latência do `GET /api/ranking`, taxa de erro e métricas de negócio ficam visíveis; Core não depende do monitoramento. |
+| Trade-offs | Todo build roda os três componentes; agente precisa de Java e Python; dois containers a mais; `/actuator/prometheus` sem autenticação no laboratório; sem deploy automático. |
+| Gatilho de revisão | Pipelines separados quando o tempo de build incomodar ou quando `ia-service`/`iot-gateway` tiverem deploy próprio em produção; alertas (Alertmanager) e tracing distribuído quando houver produção; proteger o endpoint de métricas antes de produção. |
+
+**Métricas disponíveis:**
+
+| Métrica (Prometheus) | Origem | Responde a qual "falta medir" |
+|---|---|---|
+| `http_server_requests_seconds{uri="/api/ranking"}` | Actuator (automática) | D1: latência e throughput do Ranking |
+| `http_server_requests_seconds` (todas as URIs, por status) | Actuator (automática) | Taxa de erro e latência por endpoint (D2, D4) |
+| `gameeducator_moedas_creditadas_total` | `moedas.application.MoedasAppService` | Volume de engajamento (RF02) |
+| `gameeducator_conversoes_cripto_total` | `moedas.application.MoedasAppService` | Uso da conversão em cripto (RF02) |
+| `gameeducator_cursos_desbloqueados_total` | `cursos.application.CursosAppService` | Volume de cursos bônus liberados (RF02) |
+| `jvm_memory_used_bytes`, `process_cpu_usage` | Actuator (automática) | Saúde do processo do Core |
+
+## 7. C4 — Container (atualizado) e fluxo do pipeline
+
+```mermaid
+flowchart LR
+    U[Aluno] --> FE[Front-end Vue]
+    FE -->|REST| CORE[Core Spring Boot<br/>Monólito Modular<br/>/actuator/prometheus]
+    CORE -->|JPA| DB[(PostgreSQL)]
+    CORE -->|HTTP/JSON| IA[ia-service Python]
+    GW[iot-gateway] -->|HTTP/JSON| CORE
+    PROM[Prometheus] -->|coleta a cada 5 s| CORE
+    GRAF[Grafana<br/>dashboard GameEducator - Core] -->|PromQL| PROM
+    OPS[Equipe] --> GRAF
+```
+
+```mermaid
+flowchart LR
+    DEV[Desenvolvedor] -->|git push| GIT[(GitHub)]
+    GIT -->|checkout| J[Jenkins]
+    subgraph PIPE[Jenkinsfile]
+        direction LR
+        CO[Checkout] --> PAR
+        subgraph PAR[Testes por componente - paralelo]
+            direction TB
+            JV[Core Java<br/>JUnit + ArchUnit + JaCoCo 100%]
+            PIA[ia-service<br/>pytest]
+            PIOT[iot-gateway<br/>pytest]
+        end
+        PAR --> ART[Arquivar jar]
+        ART --> IMG[Imagens Docker<br/>opcional]
+    end
+    J --> PIPE
+```
+
+## 8. Mini-lab / evidência
+
+**Hipótese:** o pipeline barra automaticamente qualquer mudança que quebre teste, fronteira de módulo ou cobertura, e a
+observabilidade mostra o comportamento real do Core (latência do ranking, erros e métricas de negócio).
+
+| Cenário | Resultado esperado | Evidência |
+|---|---|---|
+| Build normal | Todos os estágios verdes; testes Java + Python publicados | ![d6-1-pipeline-verde.png](evidencias/d6-1-pipeline-verde.png) |
+| Cobertura | `All coverage checks have been met` / relatório de cobertura no Jenkins | ![d6-2-cobertura-100.png](evidencias/d6-2-cobertura-100.png) |
+| **Portão funcionando** | Comentar um teste (ou importar um `internal` de outro módulo) → estágio **Core Java** vermelho; desfazer → verde | ![d6-3-portao-vermelho.png](evidencias/d6-3-portao-vermelho.png) |
+| Prometheus coletando | Status → Targets → `gameeducator-api` **UP** | ![d6-4-prometheus-targets.png](evidencias/d6-4-prometheus-targets.png) |
+| Grafana com tráfego | Dashboard **GameEducator - Core** com latência do ranking, req/s e métricas de negócio | ![d6-5-grafana.png](evidencias/d6-5-grafana.png) |
+
+**Como reproduzir**
+
+```bash
+# CI local (mesmo comando do pipeline)
+cd backend && mvn clean verify
+
+# Observabilidade
+docker compose up --build
+# Prometheus: http://localhost:9090   Grafana: http://localhost:3000 (admin/admin) -> Dashboards -> GameEducator
+```
+
+Gerar tráfego para o dashboard (PowerShell):
+
+```powershell
+1..50 | % { Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/alunos -ContentType 'application/json' -Body "{`"nome`":`"Aluno $_`",`"planoNome`":`"Basico`",`"planoLimiteCursos`":10}" > $null }
+1..200 | % { Invoke-RestMethod http://localhost:8080/api/ranking > $null }
+1..100 | % { Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/alunos/$(Get-Random -Min 1 -Max 51)/moedas" -ContentType 'application/json' -Body '{"quantidade":10,"motivo":"forum"}' > $null }
+1..50  | % { Invoke-RestMethod -Method Post -Uri "http://localhost:8080/api/alunos/$(Get-Random -Min 1 -Max 51)/concluir-curso" -ContentType 'application/json' -Body '{"nomeCurso":"Java","media":8.5}' > $null }
+```
+
+Configurar o Jenkins: Novo item → **Pipeline** → *Pipeline script from SCM* → Git (URL do repositório) → branch do B1 →
+Script Path `Jenkinsfile`. Se o agente não achar `mvn` ou `python`, configurar em *Gerenciar Jenkins → Tools* e adicionar
+o Python ao PATH do serviço do Jenkins.
+
+## 9. Conclusão
+
+As decisões dos desafios anteriores deixam de depender de disciplina individual: fronteiras (ArchUnit), cobertura (100%) e os
+testes dos serviços Python passam a ser portão de todo build. E o "falta medir" de cada ADR ganha instrumento: o Grafana mostra
+latência e erros por endpoint e as métricas de negócio do Core. Pipelines separados por componente, alertas e tracing **não** foram
+adotados porque ainda não há produção nem deploy independente. **Falta medir:** tempo médio do pipeline e, com o dashboard, o p95
+real do `GET /api/ranking` sob carga (D1).
+
+---
+
 # Fechamento do B1 — Visão consolidada
 
-## C4 — Container final (D1 a D5)
+## C4 — Container final (D1 a D6)
 
-Visão integrada das decisões dos cinco desafios já aceitos. O **Desafio 6 (CI/CD e
-observabilidade)** será incorporado ao diagrama quando o ADR-006 for aceito.
+Visão integrada das decisões dos seis desafios aceitos.
 
 ```mermaid
 flowchart LR
@@ -701,6 +866,7 @@ Legenda das fronteiras (confirmadas por `FronteirasModulosTest`):
 - **Serviço Python** (D3 / ADR-003): IA fora do Core, HTTP/JSON com timeout e fallback degradado.
 - **Eventos de domínio em processo** (D4 / ADR-004): `cursos` publica `CursoConcluidoEvent`; `notificacoes` consome `@Async`, sem broker.
 - **MQTT + gateway** (D5 / ADR-005): dispositivos entram no Core por `iot-gateway`, idempotência por `eventoId`.
+- **CI/CD + observabilidade** (D6 / ADR-006): `Jenkinsfile` testa os três componentes em paralelo com portão de 100% de cobertura; Prometheus e Grafana medem o Core.
 
 ## Síntese final das decisões para a PoC da AF
 
@@ -717,7 +883,7 @@ HTTP e MQTT) tem gatilho explícito de revisão.
 | D3 / ADR-003 | **`ia-service` Python (FastAPI)** chamado por HTTP/JSON síncrono, com timeout de 1,5 s e degradação transparente. | Recomendação disponível com o Core isolado da falha da IA; contrato independente de linguagem; caminho pronto para o RAG (RF04) sem tocar no Core. | Separar ML de RAG se latência/custo/ciclo divergirem; trocar HTTP por fila se virar lote. |
 | D4 / ADR-004 | **Eventos de domínio em processo + consumidor `@Async`** (sem broker); reenvio manual de notificações. | Conclusão de curso continua síncrona e consistente; notificação é eventual, isolada e recuperável. | Notificação virar serviço externo, perda de evento ser inaceitável ou surgirem 2+ consumidores independentes → outbox + RabbitMQ. |
 | D5 / ADR-005 | **MQTT (Mosquitto) + `iot-gateway` Python** com QoS 1, sessão persistente, ack manual e idempotência por `eventoId` no Core. | Dispositivos entram sem acoplar o Core ao protocolo nem à conectividade deles; eventos sobrevivem a Core ou gateway fora do ar. | TLS/auth/ACL antes de produção; fila de pendentes persistente; RabbitMQ só se vierem 2+ consumidores. |
-| D6 / ADR-006 | **Pendente** — CI/CD e observabilidade (responsável: Eduarda). | A definir no ADR-006. | A definir. |
+| D6 / ADR-006 | **Pipeline Jenkins** do monorepo com estágios paralelos (Core + `ia-service` + `iot-gateway`) e portão de **100% de cobertura**; **Prometheus + Grafana** para métricas do Core. | Toda mudança testada do mesmo jeito; latência, erros e métricas de negócio visíveis no Grafana. | Pipelines separados quando houver deploy independente em produção; alertas/tracing quando houver produção. |
 
 ### O que ainda precisa ser medido
 
@@ -729,6 +895,7 @@ observabilidade primeiro:
 - **D3**: latência de inferência e taxa de indisponibilidade do `ia-service` (para validar o timeout de 1,5 s).
 - **D4**: frequência de falha do consumidor e volume de eventos (para validar o adiamento do broker).
 - **D5**: latência fim a fim e volume por laboratório; segurança (TLS, autenticação e ACL) antes de produção.
+- **D6**: tempo médio do pipeline. O D6 entrega o **instrumento** para os itens acima: o dashboard do Grafana já mostra latência e erros por endpoint (incluindo `GET /api/ranking`) e as métricas de negócio.
 
 ## Checagem da entrega
 
@@ -737,11 +904,10 @@ observabilidade primeiro:
 | Nomes da equipe e matrículas | Cabeçalho deste README | Fernanda Theodoro Casali – 235329 · Carolina Leamari – 235249 · Eduarda Gomes Abreu e Almeida – 236021 |
 | Repositório | https://github.com/FernandaCasali/Grupo_4_GameEducator | Público |
 | Branch do B1 | `b1-architecture-lab` (consolidada) | Confirmar com o grupo |
-| ADRs aceitos | ADR-001 (D1), ADR-002 (D2), ADR-003 (D3), ADR-004 (D4), ADR-005 (D5) | Todos no índice de ADRs |
-| ADR pendente | ADR-006 (D6 · CI/CD e observabilidade) | A entregar pela Eduarda |
+| ADRs aceitos | ADR-001 (D1), ADR-002 (D2), ADR-003 (D3), ADR-004 (D4), ADR-005 (D5), ADR-006 (D6) | Todos no índice de ADRs |
 | Evidências do D1 | `evidencias/mvn-test.png`, `evidencias/d1-ranking-swagger.png`, `evidencias/d1-ranking-ate-1000.png` | Anexadas |
 | Evidências do D2 | `evidencias/d2-testes-sem-infra.png`, `evidencias/antes-estrutura.txt`, `evidencias/depois-estrutura.txt`, `evidencias/depois-testes.txt` | Anexadas |
 | Evidências do D3 | `evidencias/d3-1-ia-fora-degradado.png`, `evidencias/d3-2-ia-no-ar.png`, `evidencias/d3-demo-ia-service.txt`, `evidencias/d3-pytest-ia-service.txt` | Anexadas |
 | Evidências do D4 | `evidencias/d4-1-conclusao-ok.png`, `evidencias/d4-2-notificacao-falhou.png`, `evidencias/d4-3-reenvio.png`, `evidencias/d4-4-notificacao-enviada.png` | Anexadas |
 | Evidências do D5 | `evidencias/d5-1-simulador-e-gateway.png`, `evidencias/d5-2-core-eventos.png`, `evidencias/d5-3-core-fora.png`, `evidencias/d5-4-gateway-fora.png`, `evidencias/d5-5-pytest.png` | Anexadas |
-| Evidências do D6 | A anexar pela Eduarda | Pendente |
+| Evidências do D6 | `evidencias/d6-1-pipeline-verde.png`, `evidencias/d6-2-cobertura-100.png`, `evidencias/d6-3-portao-vermelho.png`, `evidencias/d6-4-prometheus-targets.png`, `evidencias/d6-5-grafana.png` | A anexar (Eduarda) |

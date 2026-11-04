@@ -149,6 +149,19 @@ Grupo_4_GameEducator/
 
 Acesse http://localhost:5173 (o backend precisa estar rodando em paralelo).
 
+### Observabilidade (B1 / D6): Prometheus + Grafana
+
+    docker compose up --build
+
+- Métricas do Core: http://localhost:8080/actuator/prometheus
+- Prometheus: http://localhost:9090 (Status → Targets: `gameeducator-api` UP)
+- Grafana: http://localhost:3000 (`admin` / `admin`) → Dashboards → GameEducator → **GameEducator - Core**
+
+### Pipeline (B1 / D6): Jenkins
+
+O `Jenkinsfile` na raiz testa em paralelo o Core (JUnit + ArchUnit + cobertura mínima de 100%), o `ia-service` e o `iot-gateway` (pytest).
+Detalhes no `docs/arquitetura/README.md`, Desafio 6 (ADR-006).
+
 ## Como executar os testes
 
 Dentro da pasta backend/ (onde fica o Maven Wrapper):
